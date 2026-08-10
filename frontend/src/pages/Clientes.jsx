@@ -1,0 +1,116 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { api } from '../api/client.js';
+import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
+
+export default function Clientes() {
+  const [clientes, setClientes] = useState([]);
+  const [busca, setBusca] = useState('');
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState('');
+  const [mostrarForm, setMostrarForm] = useState(false);
+  const [novoNome, setNovoNome] = useState('');
+  const [novoTelefone, setNovoTelefone] = useState('');
+  const [salvando, setSalvando] = useState(false);
+
+  function carregar() {
+    setCarregando(true);
+    api
+      .get(`/clientes${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`)
+      .then(setClientes)
+      .catch((e) => setErro(e.message))
+      .finally(() => setCarregando(false));
+  }
+
+  useEffect(() => {
+    const timeout = setTimeout(carregar, 300);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busca]);
+
+  async function handleAdicionar(e) {
+    e.preventDefault();
+    if (!novoNome.trim()) return;
+    setSalvando(true);
+    try {
+      await api.post('/clientes', { nome: novoNome, telefone: novoTelefone });
+      setNovoNome('');
+      setNovoTelefone('');
+      setMostrarForm(false);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="px-5 pt-8">
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="font-display font-semibold text-2xl text-plum-600">Clientes</h1>
+        <button
+          onClick={() => setMostrarForm(!mostrarForm)}
+          className="bg-plum-600 text-white text-sm font-medium px-3 py-2 rounded-lg"
+        >
+          {mostrarForm ? 'Cancelar' : '+ Nova'}
+        </button>
+      </div>
+
+      {mostrarForm && (
+        <form onSubmit={handleAdicionar} className="bg-white border border-base-200 rounded-xl2 p-4 mb-5 flex flex-col gap-3">
+          <input
+            placeholder="Nome"
+            value={novoNome}
+            onChange={(e) => setNovoNome(e.target.value)}
+            className="border border-base-200 rounded-lg px-3 py-2.5"
+          />
+          <input
+            placeholder="Telefone"
+            value={novoTelefone}
+            onChange={(e) => setNovoTelefone(e.target.value)}
+            className="border border-base-200 rounded-lg px-3 py-2.5"
+          />
+          <button disabled={salvando} className="bg-plum-600 text-white rounded-lg py-2.5 font-medium disabled:opacity-60">
+            {salvando ? 'Salvando...' : 'Salvar cliente'}
+          </button>
+        </form>
+      )}
+
+      <input
+        placeholder="Buscar por nome..."
+        value={busca}
+        onChange={(e) => setBusca(e.target.value)}
+        className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-4"
+      />
+
+      <Erro mensagem={erro} />
+
+      {carregando ? (
+        <Carregando />
+      ) : clientes.length === 0 ? (
+        <Vazio titulo="Nenhuma cliente encontrada" descricao="Cadastre a primeira cliente para começar." />
+      ) : (
+        <div className="flex flex-col gap-2">
+          {clientes.map((c) => (
+            <Link
+              key={c.id}
+              to={`/clientes/${c.id}`}
+              className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
+            >
+              <div>
+                <p className="font-medium text-sm">{c.nome}</p>
+                <p className="text-xs text-ink/50">{c.telefone || 'Sem telefone'}</p>
+              </div>
+              {c.cliente_fixa && (
+                <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
+                  Fixa
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
