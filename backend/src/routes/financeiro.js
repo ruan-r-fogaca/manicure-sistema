@@ -39,7 +39,7 @@ async function calcularFaturamento(inicio, fim) {
     .lte('data_pagamento', `${fim}T23:59:59`);
   if (erroPagos) throw erroPagos;
 
-  const porFormaPagamento = { pix: 0, dinheiro: 0, cartao: 0 };
+  const porFormaPagamento = { pix: 0, dinheiro: 0, credito: 0, debito: 0 };
   for (const p of pagos) {
     if (p.forma_pagamento) porFormaPagamento[p.forma_pagamento] += Number(p.valor);
   }

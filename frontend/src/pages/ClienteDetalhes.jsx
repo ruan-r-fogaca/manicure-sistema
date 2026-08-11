@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
+import { mascararTelefone } from '../utils/telefone.js';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -19,6 +20,7 @@ export default function ClienteDetalhes() {
   const [erro, setErro] = useState('');
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState({});
+  const [alterandoStatus, setAlterandoStatus] = useState(false);
 
   function carregar() {
     setCarregando(true);
@@ -56,6 +58,19 @@ export default function ClienteDetalhes() {
     }
   }
 
+  async function alternarAtivo() {
+    if (!cliente) return;
+    setAlterandoStatus(true);
+    try {
+      await api.put(`/clientes/${id}`, { ativo: !cliente.ativo });
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setAlterandoStatus(false);
+    }
+  }
+
   function linkWhatsapp() {
     if (!cliente?.telefone) return '#';
     const numero = cliente.telefone.replace(/\D/g, '');
@@ -68,6 +83,8 @@ export default function ClienteDetalhes() {
 
   if (carregando) return <Carregando />;
   if (!cliente) return <Vazio titulo="Cliente não encontrada" />;
+
+  const inativa = cliente.ativo === false;
 
   return (
     <div className="px-5 pt-8">
@@ -84,11 +101,18 @@ export default function ClienteDetalhes() {
               <h1 className="font-display font-semibold text-xl">{cliente.nome}</h1>
               <p className="text-sm text-ink/50">{cliente.telefone || 'Sem telefone'}</p>
             </div>
-            {cliente.cliente_fixa && (
-              <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
-                Fixa · a cada {cliente.frequencia_dias} dias
-              </span>
-            )}
+            <div className="flex flex-col items-end gap-1.5">
+              {inativa && (
+                <span className="text-[11px] bg-ink/10 text-ink/50 font-medium px-2 py-1 rounded-full">
+                  Inativa
+                </span>
+              )}
+              {cliente.cliente_fixa && (
+                <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
+                  Fixa · a cada {cliente.frequencia_dias} dias
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 mt-4">
@@ -109,9 +133,21 @@ export default function ClienteDetalhes() {
               </a>
             )}
           </div>
-          <button onClick={() => setEditando(true)} className="text-xs text-ink/40 mt-3">
-            Editar dados
-          </button>
+
+          <div className="flex items-center gap-4 mt-3">
+            <button onClick={() => setEditando(true)} className="text-xs text-ink/40">
+              Editar dados
+            </button>
+            <button
+              onClick={alternarAtivo}
+              disabled={alterandoStatus}
+              className={`text-xs font-medium disabled:opacity-60 ${
+                inativa ? 'text-status-atendido' : 'text-status-cancelado'
+              }`}
+            >
+              {alterandoStatus ? 'Aguarde...' : inativa ? 'Reativar cliente' : 'Inativar cliente'}
+            </button>
+          </div>
         </div>
       ) : (
         <form onSubmit={salvarEdicao} className="bg-white border border-base-200 rounded-xl2 p-4 mb-5 flex flex-col gap-3">
@@ -123,7 +159,7 @@ export default function ClienteDetalhes() {
           />
           <input
             value={form.telefone}
-            onChange={(e) => setForm({ ...form, telefone: e.target.value })}
+            onChange={(e) => setForm({ ...form, telefone: mascararTelefone(e.target.value) })}
             className="border border-base-200 rounded-lg px-3 py-2.5"
             placeholder="Telefone"
           />

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
-import { Carregando, Erro } from '../components/Estado.jsx';
-import StatusBadge from '../components/StatusBadge.jsx';
+import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
+import StatusSelect from '../components/StatusSelect.jsx';
+import PagamentoModal from '../components/PagamentoModal.jsx';
+import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 
 function formatarMoeda(valor) {
   return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -19,29 +21,52 @@ export default function Dashboard() {
   const [carregando, setCarregando] = useState(true);
   const [clientesFixasPendentes, setClientesFixasPendentes] = useState([]);
 
-  useEffect(() => {
+  function carregar() {
     api
       .get('/dashboard')
       .then(setResumo)
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
 
+    // ?apenas_proximas=true -> só quem está a 3 dias ou menos do prazo de voltar
     api
-      .get('/clientes/fixas/proximas')
+      .get('/clientes/fixas/proximas?apenas_proximas=true')
       .then(setClientesFixasPendentes)
       .catch(() => {}); // aviso opcional, não bloqueia o dashboard se falhar
+  }
+
+  useEffect(() => {
+    carregar();
   }, []);
+
+  const {
+    agendamentoPendente,
+    enviando,
+    erroModal,
+    mensagemSucesso,
+    solicitarMudancaStatus,
+    confirmarPagamento,
+    cancelarPagamento,
+  } = usePagamentoFlow({ aoAtualizar: carregar });
+
+  async function mudarStatus(agendamento, status) {
+    try {
+      await solicitarMudancaStatus(agendamento, status);
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
 
   if (carregando) return <Carregando />;
 
   return (
     <div className="px-5 pt-8">
-      <p className="text-ink/50 text-sm">Olá! 👋</p>
       <h1 className="font-display font-semibold text-2xl text-plum-600 mb-5">
         {resumo && formatarDataExtenso(resumo.data)}
       </h1>
 
       <Erro mensagem={erro} />
+      <Sucesso mensagem={mensagemSucesso} />
 
       {resumo && (
         <>
@@ -105,13 +130,24 @@ export default function Dashboard() {
                     </p>
                     <p className="text-xs text-ink/50">{a.servicos?.nome}</p>
                   </div>
-                  <StatusBadge status={a.status} />
+                  {/* Tocar no badge de status já deixa trocar pra qualquer outro,
+                      sem precisar ir na tela de clientes. */}
+                  <StatusSelect status={a.status} onChange={(novoStatus) => mudarStatus(a, novoStatus)} />
                 </div>
               ))}
             </div>
           )}
         </>
       )}
+
+      <PagamentoModal
+        aberto={!!agendamentoPendente}
+        agendamento={agendamentoPendente}
+        enviando={enviando}
+        erro={erroModal}
+        onSelecionar={confirmarPagamento}
+        onFechar={cancelarPagamento}
+      />
     </div>
   );
 }

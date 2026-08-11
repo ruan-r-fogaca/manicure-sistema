@@ -17,7 +17,7 @@ router.get('/agendamento/:agendamentoId', async (req, res) => {
 // PUT /api/pagamentos/:id -> registrar pagamento (forma e status)
 router.put('/:id', async (req, res) => {
   const { forma_pagamento, status } = req.body;
-  const validosForma = ['pix', 'dinheiro', 'cartao'];
+  const validosForma = ['pix', 'dinheiro', 'credito', 'debito'];
   const validosStatus = ['pago', 'pendente'];
 
   if (status && !validosStatus.includes(status)) return res.status(400).json({ erro: 'status inválido.' });

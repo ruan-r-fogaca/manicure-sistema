@@ -16,6 +16,15 @@ export function Vazio({ titulo, descricao, acao }) {
   );
 }
 
+export function Sucesso({ mensagem }) {
+  if (!mensagem) return null;
+  return (
+    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] bg-status-atendido text-white text-sm font-medium rounded-full px-4 py-2 shadow-lg">
+      {mensagem}
+    </div>
+  );
+}
+
 export function Erro({ mensagem }) {
   if (!mensagem) return null;
   return (

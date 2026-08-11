@@ -59,9 +59,13 @@ export default function Financeiro() {
               <span>Dinheiro</span>
               <span className="font-medium">{formatarMoeda(dados.mes.por_forma_pagamento.dinheiro)}</span>
             </div>
+            <div className="flex justify-between text-sm mb-1">
+              <span>Crédito</span>
+              <span className="font-medium">{formatarMoeda(dados.mes.por_forma_pagamento.credito)}</span>
+            </div>
             <div className="flex justify-between text-sm">
-              <span>Cartão</span>
-              <span className="font-medium">{formatarMoeda(dados.mes.por_forma_pagamento.cartao)}</span>
+              <span>Débito</span>
+              <span className="font-medium">{formatarMoeda(dados.mes.por_forma_pagamento.debito)}</span>
             </div>
           </div>
 

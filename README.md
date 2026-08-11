@@ -156,3 +156,20 @@ git push -u origin main
 - Relatórios com gráficos (faturamento por período, serviços mais vendidos)
 - Controle de faltas
 - Automação de lembretes
+
+database/migracao_ajustes.sql 
+-- ============================================================
+-- MIGRAÇÃO: ajustes solicitados (rode no SQL Editor do Supabase)
+-- Pode rodar mais de uma vez sem problema (comandos são idempotentes)
+-- ============================================================
+
+-- TELA CLIENTES #3: inativar cliente
+alter table clientes add column if not exists ativo boolean not null default true;
+
+-- TELA CLIENTES #4 / FINANCEIRO: formas de pagamento viram Dinheiro, Pix, Crédito, Débito
+alter table pagamentos drop constraint if exists pagamentos_forma_pagamento_check;
+alter table pagamentos add constraint pagamentos_forma_pagamento_check
+  check (forma_pagamento in ('pix','dinheiro','credito','debito'));
+
+-- Se você já tinha pagamentos salvos como 'cartao', migre para 'credito' (ajuste manualmente se preferir 'debito')
+update pagamentos set forma_pagamento = 'credito' where forma_pagamento = 'cartao';

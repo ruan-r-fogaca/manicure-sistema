@@ -2,10 +2,18 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
+import { mascararTelefone } from '../utils/telefone.js';
+
+const ABAS = [
+  { valor: 'ativos', texto: 'Ativos' },
+  { valor: 'inativos', texto: 'Inativos' },
+  { valor: 'todos', texto: 'Todos' },
+];
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [busca, setBusca] = useState('');
+  const [aba, setAba] = useState('ativos');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [mostrarForm, setMostrarForm] = useState(false);
@@ -15,8 +23,11 @@ export default function Clientes() {
 
   function carregar() {
     setCarregando(true);
+    const query = new URLSearchParams();
+    if (busca) query.set('busca', busca);
+    query.set('status', aba);
     api
-      .get(`/clientes${busca ? `?busca=${encodeURIComponent(busca)}` : ''}`)
+      .get(`/clientes?${query.toString()}`)
       .then(setClientes)
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
@@ -26,7 +37,7 @@ export default function Clientes() {
     const timeout = setTimeout(carregar, 300);
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busca]);
+  }, [busca, aba]);
 
   async function handleAdicionar(e) {
     e.preventDefault();
@@ -79,7 +90,7 @@ export default function Clientes() {
           <input
             placeholder="Telefone"
             value={novoTelefone}
-            onChange={(e) => setNovoTelefone(e.target.value)}
+            onChange={(e) => setNovoTelefone(mascararTelefone(e.target.value))}
             className="border border-base-200 rounded-lg px-3 py-2.5"
           />
           <button disabled={salvando} className="bg-plum-600 text-white rounded-lg py-2.5 font-medium disabled:opacity-60">
@@ -92,8 +103,22 @@ export default function Clientes() {
         placeholder="Buscar por nome..."
         value={busca}
         onChange={(e) => setBusca(e.target.value)}
-        className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-4"
+        className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
       />
+
+      <div className="flex gap-2 mb-4">
+        {ABAS.map((a) => (
+          <button
+            key={a.valor}
+            onClick={() => setAba(a.valor)}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+              aba === a.valor ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
+            }`}
+          >
+            {a.texto}
+          </button>
+        ))}
+      </div>
 
       <Erro mensagem={erro} />
 
@@ -107,17 +132,26 @@ export default function Clientes() {
             <Link
               key={c.id}
               to={`/clientes/${c.id}`}
-              className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
+              className={`bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center ${
+                c.ativo === false ? 'opacity-50' : ''
+              }`}
             >
               <div>
                 <p className="font-medium text-sm">{c.nome}</p>
                 <p className="text-xs text-ink/50">{c.telefone || 'Sem telefone'}</p>
               </div>
-              {c.cliente_fixa && (
-                <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
-                  Fixa
-                </span>
-              )}
+              <div className="flex gap-1.5">
+                {c.ativo === false && (
+                  <span className="text-[11px] bg-ink/10 text-ink/50 font-medium px-2 py-1 rounded-full">
+                    Inativa
+                  </span>
+                )}
+                {c.cliente_fixa && (
+                  <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
+                    Fixa
+                  </span>
+                )}
+              </div>
             </Link>
           ))}
         </div>

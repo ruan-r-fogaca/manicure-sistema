@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
-import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
-import StatusBadge from '../components/StatusBadge.jsx';
+import { Carregando, Erro, Vazio, Sucesso } from '../components/Estado.jsx';
+import StatusSelect from '../components/StatusSelect.jsx';
+import PagamentoModal from '../components/PagamentoModal.jsx';
+import MiniCalendario from '../components/MiniCalendario.jsx';
+import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 
 const VISOES = ['Hoje', 'Amanhã', 'Semana'];
 
@@ -30,10 +33,16 @@ function formatarDataCurta(dataISO) {
   return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
 }
 
-const STATUS_OPCOES = ['agendado', 'confirmado', 'atendido', 'cancelado', 'faltou'];
+function formatarDataExtenso(dataISO) {
+  const d = new Date(dataISO + 'T12:00:00');
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+}
 
 export default function Agenda() {
   const [visao, setVisao] = useState('Hoje');
+  // Quando uma data é escolhida no mini-calendário, ela manda na exibição,
+  // até o usuário voltar pras abas Hoje/Amanhã/Semana.
+  const [dataEscolhida, setDataEscolhida] = useState(null);
   const [agendamentos, setAgendamentos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
@@ -41,9 +50,13 @@ export default function Agenda() {
   const carregar = () => {
     setCarregando(true);
     let promessa;
-    if (visao === 'Hoje') promessa = api.get(`/agendamentos?data=${isoHoje(0)}`);
-    else if (visao === 'Amanhã') promessa = api.get(`/agendamentos?data=${isoHoje(1)}`);
-    else {
+    if (dataEscolhida) {
+      promessa = api.get(`/agendamentos?data=${dataEscolhida}`);
+    } else if (visao === 'Hoje') {
+      promessa = api.get(`/agendamentos?data=${isoHoje(0)}`);
+    } else if (visao === 'Amanhã') {
+      promessa = api.get(`/agendamentos?data=${isoHoje(1)}`);
+    } else {
       const { inicio, fim } = inicioFimSemana();
       promessa = api.get(`/agendamentos?inicio=${inicio}&fim=${fim}`);
     }
@@ -56,7 +69,17 @@ export default function Agenda() {
   useEffect(() => {
     carregar();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visao]);
+  }, [visao, dataEscolhida]);
+
+  const {
+    agendamentoPendente,
+    enviando,
+    erroModal,
+    mensagemSucesso,
+    solicitarMudancaStatus,
+    confirmarPagamento,
+    cancelarPagamento,
+  } = usePagamentoFlow({ aoAtualizar: carregar });
 
   const agrupadosPorDia = useMemo(() => {
     const grupos = {};
@@ -67,14 +90,24 @@ export default function Agenda() {
     return grupos;
   }, [agendamentos]);
 
-  async function mudarStatus(id, status) {
+  async function mudarStatus(agendamento, status) {
     try {
-      await api.put(`/agendamentos/${id}/status`, { status });
-      carregar();
+      await solicitarMudancaStatus(agendamento, status);
     } catch (e) {
       setErro(e.message);
     }
   }
+
+  function selecionarVisao(v) {
+    setDataEscolhida(null);
+    setVisao(v);
+  }
+
+  function selecionarDataCalendario(iso) {
+    setDataEscolhida(iso);
+  }
+
+  const mostrarCabecalhoPorDia = visao === 'Semana' && !dataEscolhida;
 
   return (
     <div className="px-5 pt-8">
@@ -88,21 +121,34 @@ export default function Agenda() {
         </Link>
       </div>
 
-      <div className="flex gap-2 mb-5">
-        {VISOES.map((v) => (
-          <button
-            key={v}
-            onClick={() => setVisao(v)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-              visao === v ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
-            }`}
-          >
-            {v}
-          </button>
-        ))}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="flex gap-2 flex-1">
+          {VISOES.map((v) => (
+            <button
+              key={v}
+              onClick={() => selecionarVisao(v)}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
+                !dataEscolhida && visao === v ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
+              }`}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+        <MiniCalendario dataSelecionada={dataEscolhida} onSelecionarData={selecionarDataCalendario} />
       </div>
 
+      {dataEscolhida && (
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-ink/60">{formatarDataExtenso(dataEscolhida)}</p>
+          <button onClick={() => setDataEscolhida(null)} className="text-xs text-plum-600 font-medium">
+            Voltar para Hoje
+          </button>
+        </div>
+      )}
+
       <Erro mensagem={erro} />
+      <Sucesso mensagem={mensagemSucesso} />
 
       {carregando ? (
         <Carregando />
@@ -111,7 +157,7 @@ export default function Agenda() {
       ) : (
         Object.entries(agrupadosPorDia).map(([dia, itens]) => (
           <div key={dia} className="mb-5">
-            {visao === 'Semana' && (
+            {mostrarCabecalhoPorDia && (
               <p className="text-xs font-semibold uppercase tracking-wide text-ink/40 mb-2">
                 {formatarDataCurta(dia)}
               </p>
@@ -128,25 +174,23 @@ export default function Agenda() {
                         {a.servicos?.nome} · {formatarMoeda(a.valor)}
                       </p>
                     </div>
-                    <StatusBadge status={a.status} />
+                    <StatusSelect status={a.status} onChange={(novoStatus) => mudarStatus(a, novoStatus)} />
                   </div>
-                  <select
-                    value={a.status}
-                    onChange={(e) => mudarStatus(a.id, e.target.value)}
-                    className="text-xs bg-base-100 rounded-lg px-2 py-1.5 mt-1 border-none w-full"
-                  >
-                    {STATUS_OPCOES.map((s) => (
-                      <option key={s} value={s}>
-                        Marcar como: {s}
-                      </option>
-                    ))}
-                  </select>
                 </div>
               ))}
             </div>
           </div>
         ))
       )}
+
+      <PagamentoModal
+        aberto={!!agendamentoPendente}
+        agendamento={agendamentoPendente}
+        enviando={enviando}
+        erro={erroModal}
+        onSelecionar={confirmarPagamento}
+        onFechar={cancelarPagamento}
+      />
     </div>
   );
 }
