@@ -57,6 +57,17 @@ export default function Clientes() {
         </button>
       </div>
 
+      <Link
+        to="/clientes/fixas"
+        className="flex items-center justify-between bg-rose-400/10 border border-rose-400/30 rounded-xl2 px-4 py-3 mb-5"
+      >
+        <div>
+          <p className="text-sm font-medium text-rose-500">Clientes fixas</p>
+          <p className="text-xs text-ink/50">Veja quem está no prazo de voltar</p>
+        </div>
+        <span className="text-rose-500">→</span>
+      </Link>
+
       {mostrarForm && (
         <form onSubmit={handleAdicionar} className="bg-white border border-base-200 rounded-xl2 p-4 mb-5 flex flex-col gap-3">
           <input

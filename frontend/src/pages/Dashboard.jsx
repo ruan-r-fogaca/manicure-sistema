@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [resumo, setResumo] = useState(null);
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
+  const [clientesFixasPendentes, setClientesFixasPendentes] = useState([]);
 
   useEffect(() => {
     api
@@ -24,6 +25,11 @@ export default function Dashboard() {
       .then(setResumo)
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
+
+    api
+      .get('/clientes/fixas/proximas')
+      .then(setClientesFixasPendentes)
+      .catch(() => {}); // aviso opcional, não bloqueia o dashboard se falhar
   }, []);
 
   if (carregando) return <Carregando />;
@@ -53,6 +59,20 @@ export default function Dashboard() {
               <p className="text-[11px] text-ink/50 mt-0.5">concluídos</p>
             </div>
           </div>
+
+          {clientesFixasPendentes.length > 0 && (
+            <Link
+              to="/clientes/fixas"
+              className="flex items-center justify-between bg-rose-400/10 border border-rose-400/30 rounded-xl2 px-4 py-3 mb-4"
+            >
+              <p className="text-sm font-medium text-rose-500">
+                {clientesFixasPendentes.length === 1
+                  ? '1 cliente fixa está no prazo de voltar'
+                  : `${clientesFixasPendentes.length} clientes fixas estão no prazo de voltar`}
+              </p>
+              <span className="text-rose-500">→</span>
+            </Link>
+          )}
 
           {resumo.proximo_atendimento && (
             <div className="bg-plum-600 text-white rounded-xl2 p-4 mb-6">
