@@ -8,6 +8,7 @@ import agendamentosRouter from './routes/agendamentos.js';
 import pagamentosRouter from './routes/pagamentos.js';
 import dashboardRouter from './routes/dashboard.js';
 import financeiroRouter from './routes/financeiro.js';
+import cobrancasRouter from './routes/cobrancas.js';
 import configuracoesRouter from './routes/configuracoes.js';
 
 dotenv.config();
@@ -27,9 +28,9 @@ app.use('/api/agendamentos', agendamentosRouter);
 app.use('/api/pagamentos', pagamentosRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/financeiro', financeiroRouter);
+app.use('/api/cobrancas', cobrancasRouter);
 app.use('/api/configuracoes', configuracoesRouter);
 
-// Tratamento de erro genérico
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ erro: 'Erro interno no servidor.' });

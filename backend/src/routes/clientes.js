@@ -3,8 +3,25 @@ import { supabase } from '../supabaseClient.js';
 
 const router = Router();
 
-// GET /api/clientes?busca=maria&status=ativos|inativos|todos
-// status padrão é "ativos" (não aparece cliente inativada por engano nas listas do dia a dia)
+const TIPOS_COBRANCA = ['por_atendimento', 'mensal_fixo', 'mensal_por_servico'];
+
+function validarCobranca(body) {
+  const { tipo_cobranca, valor_mensal_fixo, valor_por_servico, dia_cobranca } = body;
+  if (tipo_cobranca !== undefined && !TIPOS_COBRANCA.includes(tipo_cobranca)) {
+    return 'tipo_cobranca inválido.';
+  }
+  if (tipo_cobranca === 'mensal_fixo' && !valor_mensal_fixo) {
+    return 'Informe o valor mensal fixo para esse tipo de cobrança.';
+  }
+  if (tipo_cobranca === 'mensal_por_servico' && !valor_por_servico) {
+    return 'Informe o valor por serviço para esse tipo de cobrança.';
+  }
+  if (dia_cobranca !== undefined && dia_cobranca !== null && (dia_cobranca < 1 || dia_cobranca > 31)) {
+    return 'dia_cobranca deve ser entre 1 e 31.';
+  }
+  return null;
+}
+
 router.get('/', async (req, res) => {
   let query = supabase.from('clientes').select('*').order('nome');
   if (req.query.busca) {
@@ -13,13 +30,11 @@ router.get('/', async (req, res) => {
   const status = req.query.status || 'ativos';
   if (status === 'ativos') query = query.eq('ativo', true);
   else if (status === 'inativos') query = query.eq('ativo', false);
-  // status === 'todos' -> sem filtro
   const { data, error } = await query;
   if (error) return res.status(500).json({ erro: error.message });
   res.json(data);
 });
 
-// GET /api/clientes/:id  -> dados da cliente + último atendimento
 router.get('/:id', async (req, res) => {
   const { data: cliente, error } = await supabase
     .from('clientes')
@@ -40,7 +55,6 @@ router.get('/:id', async (req, res) => {
   res.json({ ...cliente, ultimo_atendimento: ultimoAtendimento || null });
 });
 
-// GET /api/clientes/:id/historico -> lista de atendimentos passados
 router.get('/:id/historico', async (req, res) => {
   const { data, error } = await supabase
     .from('agendamentos')
@@ -52,12 +66,6 @@ router.get('/:id/historico', async (req, res) => {
   res.json(data);
 });
 
-// GET /api/clientes/fixas/proximas -> clientes fixas
-// Sem parâmetro: lista TODAS as clientes fixas (usada na tela "Clientes fixas" -
-//   assim, assim que você marca "cliente fixa" ela já aparece aqui, mesmo sem
-//   histórico de atendimento ainda).
-// ?apenas_proximas=true: só as que estão a 3 dias ou menos do prazo de voltar
-//   (usada no aviso da tela Início, pra não virar bagunça de notificação).
 router.get('/fixas/proximas', async (req, res) => {
   const apenasProximas = req.query.apenas_proximas === 'true';
 
@@ -92,8 +100,6 @@ router.get('/fixas/proximas', async (req, res) => {
 
       if (apenasProximas && diasRestantes > 3) continue;
     } else if (apenasProximas) {
-      // ainda sem atendimento registrado: não teria "prazo" pra calcular,
-      // então essa cliente só aparece na lista completa, não no aviso rápido.
       continue;
     }
 
@@ -102,25 +108,74 @@ router.get('/fixas/proximas', async (req, res) => {
   res.json(resultado);
 });
 
-// POST /api/clientes
 router.post('/', async (req, res) => {
-  const { nome, telefone, cliente_fixa = false, frequencia_dias, servico_habitual_id, horario_habitual, observacoes } = req.body;
+  const {
+    nome,
+    telefone,
+    cliente_fixa = false,
+    frequencia_dias,
+    servico_habitual_id,
+    horario_habitual,
+    observacoes,
+    tipo_cobranca = 'por_atendimento',
+    valor_mensal_fixo,
+    valor_por_servico,
+    dia_cobranca,
+  } = req.body;
   if (!nome) return res.status(400).json({ erro: 'nome é obrigatório.' });
+
+  const erroCobranca = validarCobranca(req.body);
+  if (erroCobranca) return res.status(400).json({ erro: erroCobranca });
 
   const { data, error } = await supabase
     .from('clientes')
-    .insert({ nome, telefone, cliente_fixa, frequencia_dias, servico_habitual_id, horario_habitual, observacoes, ativo: true })
+    .insert({
+      nome,
+      telefone,
+      cliente_fixa,
+      frequencia_dias,
+      servico_habitual_id,
+      horario_habitual,
+      observacoes,
+      ativo: true,
+      tipo_cobranca,
+      valor_mensal_fixo: tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null,
+      valor_por_servico: tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null,
+      dia_cobranca: dia_cobranca || null,
+    })
     .select()
     .single();
   if (error) return res.status(500).json({ erro: error.message });
   res.status(201).json(data);
 });
 
-// PUT /api/clientes/:id (também usado para inativar/reativar, enviando { ativo: false/true })
 router.put('/:id', async (req, res) => {
-  const { nome, telefone, cliente_fixa, frequencia_dias, servico_habitual_id, horario_habitual, observacoes, ativo } = req.body;
+  const {
+    nome,
+    telefone,
+    cliente_fixa,
+    frequencia_dias,
+    servico_habitual_id,
+    horario_habitual,
+    observacoes,
+    ativo,
+    tipo_cobranca,
+    valor_mensal_fixo,
+    valor_por_servico,
+    dia_cobranca,
+  } = req.body;
+
+  const erroCobranca = validarCobranca(req.body);
+  if (erroCobranca) return res.status(400).json({ erro: erroCobranca });
+
   const payload = { nome, telefone, cliente_fixa, frequencia_dias, servico_habitual_id, horario_habitual, observacoes };
   if (ativo !== undefined) payload.ativo = ativo;
+  if (tipo_cobranca !== undefined) {
+    payload.tipo_cobranca = tipo_cobranca;
+    payload.valor_mensal_fixo = tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null;
+    payload.valor_por_servico = tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null;
+  }
+  if (dia_cobranca !== undefined) payload.dia_cobranca = dia_cobranca || null;
 
   const { data, error } = await supabase
     .from('clientes')
@@ -132,7 +187,6 @@ router.put('/:id', async (req, res) => {
   res.json(data);
 });
 
-// DELETE /api/clientes/:id
 router.delete('/:id', async (req, res) => {
   const { error } = await supabase.from('clientes').delete().eq('id', req.params.id);
   if (error) return res.status(500).json({ erro: error.message });

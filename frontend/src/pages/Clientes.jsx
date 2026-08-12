@@ -96,6 +96,9 @@ export default function Clientes() {
           <button disabled={salvando} className="bg-plum-600 text-white rounded-lg py-2.5 font-medium disabled:opacity-60">
             {salvando ? 'Salvando...' : 'Salvar cliente'}
           </button>
+          <p className="text-xs text-ink/40 -mt-1">
+            O tipo de cobrança (avulso ou mensal) é definido depois, na página da cliente.
+          </p>
         </form>
       )}
 
@@ -144,6 +147,11 @@ export default function Clientes() {
                 {c.ativo === false && (
                   <span className="text-[11px] bg-ink/10 text-ink/50 font-medium px-2 py-1 rounded-full">
                     Inativa
+                  </span>
+                )}
+                {c.tipo_cobranca && c.tipo_cobranca !== 'por_atendimento' && (
+                  <span className="text-[11px] bg-plum-600/10 text-plum-600 font-medium px-2 py-1 rounded-full">
+                    Mensal
                   </span>
                 )}
                 {c.cliente_fixa && (

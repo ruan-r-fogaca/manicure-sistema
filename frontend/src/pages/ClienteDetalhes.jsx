@@ -12,6 +12,16 @@ function formatarData(dataISO) {
   return new Date(dataISO + 'T12:00:00').toLocaleDateString('pt-BR');
 }
 
+const TIPOS_COBRANCA = [
+  { valor: 'por_atendimento', texto: 'Por atendimento (avulso)' },
+  { valor: 'mensal_fixo', texto: 'Mensal (valor fixo)' },
+  { valor: 'mensal_por_servico', texto: 'Mensal (por serviço realizado)' },
+];
+
+function rotuloTipoCobranca(tipo) {
+  return TIPOS_COBRANCA.find((t) => t.valor === tipo)?.texto || 'Por atendimento (avulso)';
+}
+
 export default function ClienteDetalhes() {
   const { id } = useParams();
   const [cliente, setCliente] = useState(null);
@@ -32,6 +42,10 @@ export default function ClienteDetalhes() {
           telefone: c.telefone || '',
           cliente_fixa: c.cliente_fixa,
           frequencia_dias: c.frequencia_dias || '',
+          tipo_cobranca: c.tipo_cobranca || 'por_atendimento',
+          valor_mensal_fixo: c.valor_mensal_fixo || '',
+          valor_por_servico: c.valor_por_servico || '',
+          dia_cobranca: c.dia_cobranca || '',
         });
         setHistorico(h);
       })
@@ -50,6 +64,9 @@ export default function ClienteDetalhes() {
       await api.put(`/clientes/${id}`, {
         ...form,
         frequencia_dias: form.frequencia_dias ? Number(form.frequencia_dias) : null,
+        valor_mensal_fixo: form.valor_mensal_fixo ? Number(form.valor_mensal_fixo) : null,
+        valor_por_servico: form.valor_por_servico ? Number(form.valor_por_servico) : null,
+        dia_cobranca: form.dia_cobranca ? Number(form.dia_cobranca) : null,
       });
       setEditando(false);
       carregar();
@@ -85,6 +102,7 @@ export default function ClienteDetalhes() {
   if (!cliente) return <Vazio titulo="Cliente não encontrada" />;
 
   const inativa = cliente.ativo === false;
+  const ehMensal = cliente.tipo_cobranca && cliente.tipo_cobranca !== 'por_atendimento';
 
   return (
     <div className="px-5 pt-8">
@@ -115,6 +133,20 @@ export default function ClienteDetalhes() {
             </div>
           </div>
 
+          <div className="mt-3 bg-base-100/60 rounded-lg px-3 py-2.5">
+            <p className="text-xs uppercase tracking-wide text-ink/40 mb-1">Cobrança</p>
+            <p className="text-sm font-medium">{rotuloTipoCobranca(cliente.tipo_cobranca)}</p>
+            {cliente.tipo_cobranca === 'mensal_fixo' && (
+              <p className="text-xs text-ink/50 mt-0.5">{formatarMoeda(cliente.valor_mensal_fixo)} / mês</p>
+            )}
+            {cliente.tipo_cobranca === 'mensal_por_servico' && (
+              <p className="text-xs text-ink/50 mt-0.5">{formatarMoeda(cliente.valor_por_servico)} por atendimento no mês</p>
+            )}
+            {ehMensal && cliente.dia_cobranca && (
+              <p className="text-xs text-ink/50 mt-0.5">Cobrança todo dia {cliente.dia_cobranca}</p>
+            )}
+          </div>
+
           <div className="flex gap-2 mt-4">
             <Link
               to={`/agenda/novo?cliente=${cliente.id}`}
@@ -129,7 +161,7 @@ export default function ClienteDetalhes() {
                 rel="noreferrer"
                 className="flex-1 bg-status-atendido/15 text-status-atendido text-sm font-medium text-center rounded-lg py-2.5"
               >
-                Enviar WhatsApp
+                Enviar WhatsApp 
               </a>
             )}
           </div>
@@ -180,6 +212,54 @@ export default function ClienteDetalhes() {
               placeholder="Frequência em dias (ex: 15)"
             />
           )}
+
+          <div className="border-t border-base-200 pt-3 mt-1">
+            <p className="text-xs uppercase tracking-wide text-ink/40 mb-2">Tipo de cobrança</p>
+            <select
+              value={form.tipo_cobranca}
+              onChange={(e) => setForm({ ...form, tipo_cobranca: e.target.value })}
+              className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
+            >
+              {TIPOS_COBRANCA.map((t) => (
+                <option key={t.valor} value={t.valor}>
+                  {t.texto}
+                </option>
+              ))}
+            </select>
+
+            {form.tipo_cobranca === 'mensal_fixo' && (
+              <input
+                type="number"
+                step="0.01"
+                value={form.valor_mensal_fixo}
+                onChange={(e) => setForm({ ...form, valor_mensal_fixo: e.target.value })}
+                className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
+                placeholder="Valor mensal fixo (R$)"
+              />
+            )}
+            {form.tipo_cobranca === 'mensal_por_servico' && (
+              <input
+                type="number"
+                step="0.01"
+                value={form.valor_por_servico}
+                onChange={(e) => setForm({ ...form, valor_por_servico: e.target.value })}
+                className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
+                placeholder="Valor por serviço realizado (R$)"
+              />
+            )}
+            {form.tipo_cobranca !== 'por_atendimento' && (
+              <input
+                type="number"
+                min="1"
+                max="31"
+                value={form.dia_cobranca}
+                onChange={(e) => setForm({ ...form, dia_cobranca: e.target.value })}
+                className="border border-base-200 rounded-lg px-3 py-2.5 w-full"
+                placeholder="Dia da cobrança (opcional, ex: 5)"
+              />
+            )}
+          </div>
+
           <div className="flex gap-2">
             <button type="submit" className="flex-1 bg-plum-600 text-white rounded-lg py-2.5 font-medium">
               Salvar
@@ -206,7 +286,10 @@ export default function ClienteDetalhes() {
               </div>
               <p className="text-xs text-ink/50">
                 {formatarMoeda(h.valor)}
-                {h.pagamentos?.[0] && ` · ${h.pagamentos[0].status === 'pago' ? `Pago (${h.pagamentos[0].forma_pagamento || '-'})` : 'Pendente'}`}
+                {ehMensal
+                  ? ' · Incluso na mensalidade'
+                  : h.pagamentos?.[0] &&
+                    ` · ${h.pagamentos[0].status === 'pago' ? `Pago (${h.pagamentos[0].forma_pagamento || '-'})` : 'Pendente'}`}
               </p>
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro } from '../components/Estado.jsx';
 
@@ -17,6 +18,18 @@ function CardPeriodo({ titulo, dados }) {
       <div className="flex justify-between">
         <span className="text-sm text-ink/60">Pagamentos recebidos</span>
         <span className="font-display font-semibold text-status-atendido">{formatarMoeda(dados.pagamentos_recebidos)}</span>
+      </div>
+    </div>
+  );
+}
+
+function LinhaOrigem({ nome, dados }) {
+  return (
+    <div className="flex justify-between items-center py-1.5">
+      <span className="text-sm text-ink/70">{nome}</span>
+      <div className="text-right">
+        <p className="text-sm font-medium">{formatarMoeda(dados.cobrado)}</p>
+        {dados.pendente > 0 && <p className="text-[11px] text-status-agendado">{formatarMoeda(dados.pendente)} pendente</p>}
       </div>
     </div>
   );
@@ -48,6 +61,30 @@ export default function Financeiro() {
           <CardPeriodo titulo="Hoje" dados={dados.hoje} />
           <CardPeriodo titulo="Esta semana" dados={dados.semana} />
           <CardPeriodo titulo="Este mês" dados={dados.mes} />
+
+          {dados.origem_mes && (
+            <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-3">
+              <p className="text-xs uppercase tracking-wide text-ink/40 mb-2">Origem da receita (mês)</p>
+              <LinhaOrigem nome="Avulso (por atendimento)" dados={dados.origem_mes.avulso} />
+              <LinhaOrigem nome="Mensal (valor fixo)" dados={dados.origem_mes.mensal_fixo} />
+              <LinhaOrigem nome="Mensal (por serviço)" dados={dados.origem_mes.mensal_por_servico} />
+              <div className="flex justify-between items-center pt-2 mt-1 border-t border-base-200">
+                <span className="text-sm font-medium">Total do mês</span>
+                <span className="font-display font-semibold text-plum-600">{formatarMoeda(dados.origem_mes.total_cobrado)}</span>
+              </div>
+            </div>
+          )}
+
+          <Link
+            to="/financeiro/cobrancas"
+            className="flex items-center justify-between bg-plum-600/10 border border-plum-600/30 rounded-xl2 px-4 py-3 mb-3"
+          >
+            <div>
+              <p className="text-sm font-medium text-plum-600">Fechamento mensal</p>
+              <p className="text-xs text-ink/50">Gerar e conferir as cobranças dos clientes mensais</p>
+            </div>
+            <span className="text-plum-600">→</span>
+          </Link>
 
           <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-3">
             <p className="text-xs uppercase tracking-wide text-ink/40 mb-2">Por forma de pagamento (mês)</p>

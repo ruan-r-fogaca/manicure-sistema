@@ -7,6 +7,7 @@ import Clientes from './pages/Clientes.jsx';
 import ClienteDetalhes from './pages/ClienteDetalhes.jsx';
 import ClientesFixas from './pages/ClientesFixas.jsx';
 import Financeiro from './pages/Financeiro.jsx';
+import Cobrancas from './pages/Cobrancas.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/clientes/fixas" element={<ClientesFixas />} />
         <Route path="/clientes/:id" element={<ClienteDetalhes />} />
         <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/financeiro/cobrancas" element={<Cobrancas />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
       </Routes>
       <BottomNav />
