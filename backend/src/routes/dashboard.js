@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
+import { hojeBrasilISO } from '../utils/horarios.js';
 
 const router = Router();
 
 // GET /api/dashboard -> resumo do dia atual
 router.get('/', async (req, res) => {
-  const hoje = req.query.data || new Date().toISOString().slice(0, 10);
+  const hoje = req.query.data || hojeBrasilISO();
 
   const { data: agendamentosHoje, error } = await supabase
     .from('agendamentos')

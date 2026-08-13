@@ -2,6 +2,12 @@
 
 const DIAS_SEMANA = ['domingo', 'segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado'];
 
+// Data de "hoje" no fuso do Brasil, independente do fuso do servidor (o Render roda em UTC,
+// então new Date().toISOString() "vira o dia" cedo demais à noite).
+function hojeBrasilISO() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+}
+
 function timeToMinutes(t) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
@@ -47,4 +53,4 @@ function haSobreposicao(inicioA, fimA, inicioB, fimB) {
   return timeToMinutes(inicioA) < timeToMinutes(fimB) && timeToMinutes(inicioB) < timeToMinutes(fimA);
 }
 
-export { timeToMinutes, minutesToTime, calcularHoraFim, dentroDoExpediente, haSobreposicao, DIAS_SEMANA };
+export { timeToMinutes, minutesToTime, calcularHoraFim, dentroDoExpediente, haSobreposicao, hojeBrasilISO, DIAS_SEMANA };

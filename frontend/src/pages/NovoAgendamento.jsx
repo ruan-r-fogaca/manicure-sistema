@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Erro } from '../components/Estado.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
+import { hojeISO } from '../utils/data.js';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -16,8 +17,8 @@ export default function NovoAgendamento() {
   const [servicos, setServicos] = useState([]);
 
   const [clienteId, setClienteId] = useState(params.get('cliente') || '');
-  const [servicoId, setServicoId] = useState('');
-  const [data, setData] = useState(new Date().toISOString().slice(0, 10));
+  const [servicoIds, setServicoIds] = useState([]);
+  const [data, setData] = useState(hojeISO());
   const [horaInicio, setHoraInicio] = useState('');
   const [observacao, setObservacao] = useState('');
 
@@ -40,17 +41,25 @@ export default function NovoAgendamento() {
     api.get('/servicos?ativo=true').then(setServicos).catch((e) => setErro(e.message));
   }, []);
 
-  const servicoSelecionado = servicos.find((s) => s.id === servicoId);
+  const servicosSelecionados = servicos.filter((s) => servicoIds.includes(s.id));
+  const duracaoTotal = servicosSelecionados.reduce((soma, s) => soma + s.duracao_minutos, 0);
+  const valorTotal = servicosSelecionados.reduce((soma, s) => soma + Number(s.preco), 0);
 
-  function calcularTermino() {
-    if (!servicoSelecionado || !horaInicio) return null;
-    const [h, m] = horaInicio.split(':').map(Number);
-    const totalMin = h * 60 + m + servicoSelecionado.duracao_minutos;
-    const hf = Math.floor(totalMin / 60)
-      .toString()
-      .padStart(2, '0');
+  function somarMinutos(hora, minutos) {
+    const [h, m] = hora.split(':').map(Number);
+    const totalMin = h * 60 + m + minutos;
+    const hf = Math.floor(totalMin / 60).toString().padStart(2, '0');
     const mf = (totalMin % 60).toString().padStart(2, '0');
     return `${hf}:${mf}`;
+  }
+
+  function calcularTermino() {
+    if (servicosSelecionados.length === 0 || !horaInicio) return null;
+    return somarMinutos(horaInicio, duracaoTotal);
+  }
+
+  function alternarServico(id) {
+    setServicoIds((atual) => (atual.includes(id) ? atual.filter((s) => s !== id) : [...atual, id]));
   }
 
   async function handleAdicionarCliente(e) {
@@ -78,19 +87,23 @@ export default function NovoAgendamento() {
   async function handleSubmit(e) {
     e.preventDefault();
     setErro('');
-    if (!clienteId || !servicoId || !data || !horaInicio) {
-      setErro('Preencha cliente, serviço, data e horário.');
+    if (!clienteId || servicoIds.length === 0 || !data || !horaInicio) {
+      setErro('Preencha cliente, ao menos um serviço, data e horário.');
       return;
     }
     setEnviando(true);
     try {
-      await api.post('/agendamentos', {
-        cliente_id: clienteId,
-        servico_id: servicoId,
-        data,
-        hora_inicio: horaInicio,
-        observacao,
-      });
+      let inicioAtual = horaInicio;
+      for (const servico of servicosSelecionados) {
+        await api.post('/agendamentos', {
+          cliente_id: clienteId,
+          servico_id: servico.id,
+          data,
+          hora_inicio: inicioAtual,
+          observacao,
+        });
+        inicioAtual = somarMinutos(inicioAtual, servico.duracao_minutos);
+      }
       navigate('/agenda');
     } catch (e) {
       setErro(e.message);
@@ -176,19 +189,19 @@ export default function NovoAgendamento() {
         </div>
 
         <div>
-          <label className="text-sm font-medium text-ink/70 mb-1 block">Serviço</label>
-          <select
-            value={servicoId}
-            onChange={(e) => setServicoId(e.target.value)}
-            className="w-full bg-white border border-base-200 rounded-lg px-3 py-2.5"
-          >
-            <option value="">Selecione...</option>
+          <label className="text-sm font-medium text-ink/70 mb-1 block">Serviços</label>
+          <div className="flex flex-col gap-2 bg-white border border-base-200 rounded-lg px-3 py-2.5">
             {servicos.map((s) => (
-              <option key={s.id} value={s.id}>
+              <label key={s.id} className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={servicoIds.includes(s.id)}
+                  onChange={() => alternarServico(s.id)}
+                />
                 {s.nome} · {formatarMoeda(s.preco)}
-              </option>
+              </label>
             ))}
-          </select>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -222,12 +235,12 @@ export default function NovoAgendamento() {
           />
         </div>
 
-        {servicoSelecionado && horaInicio && (
+        {servicosSelecionados.length > 0 && horaInicio && (
           <div className="bg-plum-600/5 border border-plum-600/20 rounded-xl2 p-4 text-sm">
             <p className="font-display font-semibold text-plum-600 mb-1">Resumo</p>
-            <p>Duração: {servicoSelecionado.duracao_minutos} min</p>
+            <p>Duração total: {duracaoTotal} min</p>
             <p>Término: {termino}</p>
-            <p>Valor: {formatarMoeda(servicoSelecionado.preco)}</p>
+            <p>Valor total: {formatarMoeda(valorTotal)}</p>
           </div>
         )}
 

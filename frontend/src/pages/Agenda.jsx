@@ -6,13 +6,14 @@ import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import MiniCalendario from '../components/MiniCalendario.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
+import { dataParaISO } from '../utils/data.js';
 
 const VISOES = ['Hoje', 'Amanhã', 'Semana'];
 
 function isoHoje(offsetDias = 0) {
   const d = new Date();
   d.setDate(d.getDate() + offsetDias);
-  return d.toISOString().slice(0, 10);
+  return dataParaISO(d);
 }
 
 function inicioFimSemana() {
@@ -21,7 +22,7 @@ function inicioFimSemana() {
   inicio.setDate(hoje.getDate() - hoje.getDay());
   const fim = new Date(inicio);
   fim.setDate(inicio.getDate() + 6);
-  return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) };
+  return { inicio: dataParaISO(inicio), fim: dataParaISO(fim) };
 }
 
 function formatarMoeda(v) {

@@ -23,11 +23,20 @@ export default function Configuracoes() {
   const [erro, setErro] = useState('');
   const [salvandoHorarios, setSalvandoHorarios] = useState(false);
   const [editandoServico, setEditandoServico] = useState(null);
+  const [criandoServico, setCriandoServico] = useState(null);
+
+  function normalizarHorarios(horarios) {
+    const normalizado = {};
+    for (const chave of Object.keys(horarios)) {
+      normalizado[chave] = horarios[chave] ? { ...horarios[chave], fecha: '23:59' } : null;
+    }
+    return normalizado;
+  }
 
   function carregar() {
     Promise.all([api.get('/configuracoes'), api.get('/servicos')])
       .then(([c, s]) => {
-        setConfig(c);
+        setConfig({ ...c, horarios_funcionamento: normalizarHorarios(c.horarios_funcionamento) });
         setServicos(s);
       })
       .catch((e) => setErro(e.message))
@@ -40,7 +49,7 @@ export default function Configuracoes() {
     setConfig((prev) => {
       const horarios = { ...prev.horarios_funcionamento };
       if (campo === 'fechado') {
-        horarios[chave] = valor ? null : { abre: '08:00', fecha: '18:00' };
+        horarios[chave] = valor ? null : { abre: '08:00', fecha: '23:59' };
       } else {
         horarios[chave] = { ...horarios[chave], [campo]: valor };
       }
@@ -72,6 +81,16 @@ export default function Configuracoes() {
     }
   }
 
+  async function criarServico() {
+    try {
+      await api.post('/servicos', criandoServico);
+      setCriandoServico(null);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
   if (carregando) return <Carregando />;
 
   return (
@@ -89,17 +108,11 @@ export default function Configuracoes() {
               <span className="text-sm w-20">{label}</span>
               {dia ? (
                 <div className="flex items-center gap-1 flex-1">
+                  <span className="text-xs text-ink/30">Abre às</span>
                   <input
                     type="time"
                     value={dia.abre}
                     onChange={(e) => alterarDia(chave, 'abre', e.target.value)}
-                    className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1"
-                  />
-                  <span className="text-xs text-ink/30">até</span>
-                  <input
-                    type="time"
-                    value={dia.fecha}
-                    onChange={(e) => alterarDia(chave, 'fecha', e.target.value)}
                     className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1"
                   />
                 </div>
@@ -122,8 +135,26 @@ export default function Configuracoes() {
         </button>
       </div>
 
-      <h2 className="font-display font-semibold text-lg mb-3">Serviços</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-display font-semibold text-lg">Serviços</h2>
+        <button
+          onClick={() => setCriandoServico({ nome: '', preco: '', duracao_minutos: '', ativo: true })}
+          className="w-8 h-8 flex items-center justify-center bg-plum-600 text-white rounded-lg text-lg font-medium shrink-0"
+          aria-label="Adicionar novo serviço"
+          title="Adicionar novo serviço"
+        >
+          +
+        </button>
+      </div>
       <div className="flex flex-col gap-2">
+        {criandoServico && (
+          <ServicoForm
+            servico={criandoServico}
+            onChange={setCriandoServico}
+            onSalvar={criarServico}
+            onCancelar={() => setCriandoServico(null)}
+          />
+        )}
         {servicos.map((s) =>
           editandoServico?.id === s.id ? (
             <ServicoForm

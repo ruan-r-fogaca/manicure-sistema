@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
+import { hojeBrasilISO } from '../utils/horarios.js';
 
 const router = Router();
 
@@ -105,7 +106,7 @@ async function origemPorTipo(inicio, fim, competencia) {
 
 router.get('/', async (req, res) => {
   try {
-    const dataRef = req.query.data || new Date().toISOString().slice(0, 10);
+    const dataRef = req.query.data || hojeBrasilISO();
     const { inicio: inicioSemana, fim: fimSemana } = inicioFimSemana(dataRef);
     const { inicio: inicioMes, fim: fimMes } = inicioFimMes(dataRef);
     const competencia = `${inicioMes.slice(0, 7)}-01`;
@@ -141,7 +142,7 @@ router.get('/', async (req, res) => {
 
 router.post('/fechamento', async (req, res) => {
   try {
-    const competenciaStr = req.body?.competencia || new Date().toISOString().slice(0, 7);
+    const competenciaStr = req.body?.competencia || hojeBrasilISO().slice(0, 7);
     if (!/^\d{4}-\d{2}$/.test(competenciaStr)) {
       return res.status(400).json({ erro: 'competencia deve estar no formato YYYY-MM.' });
     }

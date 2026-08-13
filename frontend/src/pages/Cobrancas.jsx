@@ -8,7 +8,8 @@ function formatarMoeda(v) {
 }
 
 function mesAtual() {
-  return new Date().toISOString().slice(0, 7); // YYYY-MM
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
 }
 
 function formatarCompetencia(comp) {
