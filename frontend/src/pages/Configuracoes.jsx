@@ -8,15 +8,20 @@ function formatarMoeda(v) {
 
 export default function Configuracoes() {
   const [servicos, setServicos] = useState([]);
+  const [mensagens, setMensagens] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
   const [editandoServico, setEditandoServico] = useState(null);
   const [criandoServico, setCriandoServico] = useState(null);
+  const [editandoMensagem, setEditandoMensagem] = useState(null);
+  const [criandoMensagem, setCriandoMensagem] = useState(null);
 
   function carregar() {
-    api
-      .get('/servicos')
-      .then(setServicos)
+    Promise.all([api.get('/servicos'), api.get('/mensagens')])
+      .then(([s, m]) => {
+        setServicos(s);
+        setMensagens(m);
+      })
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
   }
@@ -37,6 +42,35 @@ export default function Configuracoes() {
     try {
       await api.post('/servicos', criandoServico);
       setCriandoServico(null);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
+  async function salvarMensagem(mensagem) {
+    try {
+      await api.put(`/mensagens/${mensagem.id}`, mensagem);
+      setEditandoMensagem(null);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
+  async function criarMensagem() {
+    try {
+      await api.post('/mensagens', criandoMensagem);
+      setCriandoMensagem(null);
+      carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
+  async function excluirMensagem(id) {
+    try {
+      await api.del(`/mensagens/${id}`);
       carregar();
     } catch (e) {
       setErro(e.message);
@@ -94,6 +128,88 @@ export default function Configuracoes() {
             </div>
           )
         )}
+      </div>
+
+      <div className="flex items-center justify-between mb-1 mt-8">
+        <h2 className="font-display font-semibold text-lg">Mensagens</h2>
+        <button
+          onClick={() => setCriandoMensagem({ nome: '', texto: '' })}
+          className="w-8 h-8 flex items-center justify-center bg-plum-600 text-white rounded-lg text-lg font-medium shrink-0"
+          aria-label="Adicionar novo modelo de mensagem"
+          title="Adicionar novo modelo de mensagem"
+        >
+          +
+        </button>
+      </div>
+      <p className="text-xs text-ink/40 mb-3">
+        Use {'{nome}'}, {'{data}'}, {'{hora}'} e {'{servico}'} no texto — o sistema substitui pelos dados do atendimento na hora de enviar.
+      </p>
+      <div className="flex flex-col gap-2">
+        {criandoMensagem && (
+          <MensagemForm
+            mensagem={criandoMensagem}
+            onChange={setCriandoMensagem}
+            onSalvar={criarMensagem}
+            onCancelar={() => setCriandoMensagem(null)}
+          />
+        )}
+        {mensagens.length === 0 && !criandoMensagem && (
+          <p className="text-sm text-ink/40 py-2">Nenhum modelo criado ainda.</p>
+        )}
+        {mensagens.map((m) =>
+          editandoMensagem?.id === m.id ? (
+            <MensagemForm
+              key={m.id}
+              mensagem={editandoMensagem}
+              onChange={setEditandoMensagem}
+              onSalvar={() => salvarMensagem(editandoMensagem)}
+              onCancelar={() => setEditandoMensagem(null)}
+            />
+          ) : (
+            <div key={m.id} className="bg-white border border-base-200 rounded-xl2 p-3">
+              <div className="flex justify-between items-start">
+                <p className="font-medium text-sm">{m.nome}</p>
+                <div className="flex gap-3 shrink-0">
+                  <button onClick={() => setEditandoMensagem(m)} className="text-xs text-plum-600 font-medium">
+                    Editar
+                  </button>
+                  <button onClick={() => excluirMensagem(m.id)} className="text-xs text-status-cancelado font-medium">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+              <p className="text-xs text-ink/50 mt-1 whitespace-pre-wrap">{m.texto}</p>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MensagemForm({ mensagem, onChange, onSalvar, onCancelar }) {
+  return (
+    <div className="bg-white border border-plum-600/30 rounded-xl2 p-3 flex flex-col gap-2">
+      <input
+        value={mensagem.nome}
+        onChange={(e) => onChange({ ...mensagem, nome: e.target.value })}
+        className="border border-base-200 rounded-lg px-2 py-1.5 text-sm"
+        placeholder="Nome do modelo (ex: Lembrete)"
+      />
+      <textarea
+        value={mensagem.texto}
+        onChange={(e) => onChange({ ...mensagem, texto: e.target.value })}
+        rows={4}
+        className="border border-base-200 rounded-lg px-2 py-1.5 text-sm"
+        placeholder="Olá {nome}, tudo bem?..."
+      />
+      <div className="flex gap-2">
+        <button onClick={onSalvar} className="flex-1 bg-plum-600 text-white rounded-lg py-2 text-sm font-medium">
+          Salvar
+        </button>
+        <button onClick={onCancelar} className="flex-1 bg-base-100 rounded-lg py-2 text-sm font-medium">
+          Cancelar
+        </button>
       </div>
     </div>
   );

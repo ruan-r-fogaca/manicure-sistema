@@ -57,11 +57,13 @@ export default function ClienteDetalhes() {
   const [editando, setEditando] = useState(false);
   const [form, setForm] = useState({});
   const [alterandoStatus, setAlterandoStatus] = useState(false);
+  const [mensagens, setMensagens] = useState([]);
+  const [mostrarSeletorMensagem, setMostrarSeletorMensagem] = useState(false);
 
   function carregar() {
     setCarregando(true);
-    Promise.all([api.get(`/clientes/${id}`), api.get(`/clientes/${id}/historico`)])
-      .then(([c, h]) => {
+    Promise.all([api.get(`/clientes/${id}`), api.get(`/clientes/${id}/historico`), api.get('/mensagens')])
+      .then(([c, h, m]) => {
         setCliente(c);
         setForm({
           nome: c.nome,
@@ -74,6 +76,7 @@ export default function ClienteDetalhes() {
           dia_cobranca: c.dia_cobranca || '',
         });
         setHistorico(h);
+        setMensagens(m);
       })
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
@@ -114,20 +117,44 @@ export default function ClienteDetalhes() {
     }
   }
 
-  function linkWhatsapp() {
-    if (!cliente?.telefone) return '#';
-    const numero = cliente.telefone.replace(/\D/g, '');
+  function proximoAtendimento() {
     // Agrupa por grupo_id (quando vários serviços foram marcados juntos) e ordena
     // por data+hora pra achar o próximo atendimento de verdade, não o mais distante.
     const itens = agruparAgendamentos(historico).sort((a, b) =>
       a.data === b.data ? a.hora_inicio.localeCompare(b.hora_inicio) : a.data.localeCompare(b.data)
     );
-    const proximo = itens.find((it) => ['agendado', 'confirmado'].includes(it.status));
-    const mensagem = proximo
+    return itens.find((it) => ['agendado', 'confirmado'].includes(it.status)) || null;
+  }
+
+  function mensagemPadrao() {
+    const proximo = proximoAtendimento();
+    return proximo
       ? `Olá ${cliente.nome}, tudo bem?\nEste é um lembrete para o seu atendimento, dia ${formatarDataMensagem(proximo.data)} às ${proximo.hora_inicio?.slice(0, 5)}.\nServiço: ${proximo.servicosNome}\nPosso confirmar?  Obrigada ❤️`
       : `Oi, ${cliente.nome}! Tudo bem? 💅`;
+  }
+
+  function preencherModelo(texto) {
+    const proximo = proximoAtendimento();
+    return texto
+      .replaceAll('{nome}', cliente.nome)
+      .replaceAll('{data}', proximo ? formatarDataMensagem(proximo.data) : '')
+      .replaceAll('{hora}', proximo ? proximo.hora_inicio?.slice(0, 5) : '')
+      .replaceAll('{servico}', proximo ? proximo.servicosNome : '');
+  }
+
+  function abrirWhatsapp(texto) {
+    const numero = cliente.telefone.replace(/\D/g, '');
     const numeroComDDI = numero.startsWith('55') ? numero : `55${numero}`;
-    return `https://wa.me/${numeroComDDI}?text=${encodeURIComponent(mensagem)}`;
+    window.open(`https://wa.me/${numeroComDDI}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    setMostrarSeletorMensagem(false);
+  }
+
+  function handleClickWhatsapp() {
+    if (mensagens.length === 0) {
+      abrirWhatsapp(mensagemPadrao());
+    } else {
+      setMostrarSeletorMensagem(true);
+    }
   }
 
   if (carregando) return <Carregando />;
@@ -187,14 +214,13 @@ export default function ClienteDetalhes() {
               Novo agendamento
             </Link>
             {cliente.telefone && (
-              <a
-                href={linkWhatsapp()}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={handleClickWhatsapp}
                 className="flex-1 bg-status-atendido/15 text-status-atendido text-sm font-medium text-center rounded-lg py-2.5"
               >
-                Enviar WhatsApp 
-              </a>
+                Enviar WhatsApp
+              </button>
             )}
           </div>
 
@@ -325,6 +351,34 @@ export default function ClienteDetalhes() {
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {mostrarSeletorMensagem && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-5 pb-6">
+            <h2 className="font-display font-semibold text-lg mb-1">Qual mensagem enviar?</h2>
+            <p className="text-sm text-ink/50 mb-4">Escolha um modelo pra {cliente.nome}.</p>
+            <div className="flex flex-col gap-2 mb-3">
+              {mensagens.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => abrirWhatsapp(preencherModelo(m.texto))}
+                  className="bg-base-100 hover:bg-plum-600/10 border border-base-200 rounded-lg py-3 px-3 text-sm font-medium text-left"
+                >
+                  {m.nome}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setMostrarSeletorMensagem(false)}
+              className="w-full text-sm text-ink/50 py-2"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
     </div>

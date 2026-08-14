@@ -10,6 +10,7 @@ import dashboardRouter from './routes/dashboard.js';
 import financeiroRouter from './routes/financeiro.js';
 import cobrancasRouter from './routes/cobrancas.js';
 import configuracoesRouter from './routes/configuracoes.js';
+import mensagensRouter from './routes/mensagens.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/financeiro', financeiroRouter);
 app.use('/api/cobrancas', cobrancasRouter);
 app.use('/api/configuracoes', configuracoesRouter);
+app.use('/api/mensagens', mensagensRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);
