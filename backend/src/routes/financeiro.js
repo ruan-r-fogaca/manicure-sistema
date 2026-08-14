@@ -30,12 +30,14 @@ async function calcularFaturamento(inicio, fim) {
     .lte('data', fim);
   if (erroAtendidos) throw erroAtendidos;
 
+  // -03:00 explícito: data_pagamento é timestamptz (instante real), então sem o
+  // fuso a comparação assume UTC e desloca o dia perto da meia-noite no Brasil.
   const { data: pagos, error: erroPagos } = await supabase
     .from('pagamentos')
     .select('valor, forma_pagamento, data_pagamento')
     .eq('status', 'pago')
-    .gte('data_pagamento', `${inicio}T00:00:00`)
-    .lte('data_pagamento', `${fim}T23:59:59`);
+    .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
+    .lte('data_pagamento', `${fim}T23:59:59-03:00`);
   if (erroPagos) throw erroPagos;
 
   const porFormaPagamento = { pix: 0, dinheiro: 0, credito: 0, debito: 0 };
@@ -82,12 +84,15 @@ async function origemPorTipo(inicio, fim, competencia) {
     .lte('data', fim);
   if (erroAvulso) throw erroAvulso;
 
+  // Filtra pelo tipo de cobrança do cliente pra não misturar pagamentos de
+  // atendimento avulso com visitas de clientes mensais (que já pagaram no fechamento).
   const { data: avulsoPago, error: erroAvulsoPago } = await supabase
     .from('pagamentos')
-    .select('valor, status, data_pagamento')
+    .select('valor, agendamentos!inner(clientes!inner(tipo_cobranca))')
     .eq('status', 'pago')
-    .gte('data_pagamento', `${inicio}T00:00:00`)
-    .lte('data_pagamento', `${fim}T23:59:59`);
+    .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento')
+    .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
+    .lte('data_pagamento', `${fim}T23:59:59-03:00`);
   if (erroAvulsoPago) throw erroAvulsoPago;
 
   const avulso = {
@@ -118,10 +123,16 @@ router.get('/', async (req, res) => {
       origemPorTipo(inicioMes, fimMes, competencia),
     ]);
 
+    // "Pendente" = atendimento avulso já realizado mas ainda não pago. Um pagamento
+    // "pendente" é criado assim que o agendamento é marcado, então sem os filtros de
+    // status='atendido' e tipo_cobranca isso contaria até serviço que nem aconteceu
+    // ainda, ou visita de cliente mensal (que já pagou no fechamento do mês).
     const { data: pendentesAvulso, error: erroPendentes } = await supabase
       .from('pagamentos')
-      .select('valor')
-      .eq('status', 'pendente');
+      .select('valor, agendamentos!inner(status, clientes!inner(tipo_cobranca))')
+      .eq('status', 'pendente')
+      .eq('agendamentos.status', 'atendido')
+      .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento');
     if (erroPendentes) throw erroPendentes;
 
     const { data: pendentesMensais, error: erroPendentesMensais } = await supabase
@@ -138,6 +149,25 @@ router.get('/', async (req, res) => {
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
+});
+
+// GET /api/financeiro/atendimentos?inicio=2026-08-10&fim=2026-08-16
+// Lista os atendimentos concluídos no período, com o status de pagamento de
+// cada um — usado pra montar o checklist de fechamento (dia/semana).
+router.get('/atendimentos', async (req, res) => {
+  const { inicio, fim } = req.query;
+  if (!inicio || !fim) return res.status(400).json({ erro: 'inicio e fim são obrigatórios.' });
+
+  const { data, error } = await supabase
+    .from('agendamentos')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome), pagamentos(id, status, forma_pagamento)')
+    .eq('status', 'atendido')
+    .gte('data', inicio)
+    .lte('data', fim)
+    .order('data')
+    .order('hora_inicio');
+  if (error) return res.status(500).json({ erro: error.message });
+  res.json(data);
 });
 
 router.post('/fechamento', async (req, res) => {

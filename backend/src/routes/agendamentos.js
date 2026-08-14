@@ -24,7 +24,7 @@ async function existeConflito(data, horaInicio, horaFim, ignorarId = null) {
 router.get('/', async (req, res) => {
   let query = supabase
     .from('agendamentos')
-    .select('*, clientes(nome, telefone), servicos(nome)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome)')
     .order('data')
     .order('hora_inicio');
 
@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('agendamentos')
-    .select('*, clientes(nome, telefone), servicos(nome), pagamentos(*)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome), pagamentos(*)')
     .eq('id', req.params.id)
     .single();
   if (error) return res.status(404).json({ erro: 'Agendamento não encontrado.' });
@@ -83,7 +83,7 @@ router.post('/', async (req, res) => {
       ordem: ordem || 0,
       status: 'agendado',
     })
-    .select('*, clientes(nome, telefone), servicos(nome)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome)')
     .single();
 
   if (error) return res.status(500).json({ erro: error.message });
@@ -111,7 +111,7 @@ router.put('/:id/remarcar', async (req, res) => {
     .from('agendamentos')
     .update({ data, hora_inicio, hora_fim, status: 'agendado' })
     .eq('id', req.params.id)
-    .select('*, clientes(nome, telefone), servicos(nome)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome)')
     .single();
 
   if (error) return res.status(500).json({ erro: error.message });
@@ -128,7 +128,7 @@ router.put('/:id/status', async (req, res) => {
     .from('agendamentos')
     .update({ status })
     .eq('id', req.params.id)
-    .select('*, clientes(nome, telefone), servicos(nome)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome)')
     .single();
 
   if (error) return res.status(500).json({ erro: error.message });

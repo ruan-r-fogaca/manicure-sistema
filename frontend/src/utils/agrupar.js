@@ -18,6 +18,11 @@ export function agruparAgendamentos(lista) {
     const horaInicio = ordenados[0].hora_inicio;
     const horaFim = ordenados[ordenados.length - 1].hora_fim;
 
+    // Cliente mensal já pagou no fechamento do mês — a visita não tem um
+    // pagamento avulso de verdade, então não entra como "pendente"/"pago".
+    const ehMensal = a.clientes?.tipo_cobranca && a.clientes.tipo_cobranca !== 'por_atendimento';
+    const pagamentoRepresentativo = ordenados[0].pagamentos?.[0];
+
     itens.push({
       ids: ordenados.map((m) => m.id),
       data: a.data,
@@ -31,6 +36,9 @@ export function agruparAgendamentos(lista) {
       valor: ordenados.reduce((soma, m) => soma + Number(m.valor), 0),
       status: a.status,
       observacao: a.observacao,
+      pagamentoIds: ordenados.map((m) => m.pagamentos?.[0]?.id).filter(Boolean),
+      pagamentoStatus: ehMensal ? 'incluso' : pagamentoRepresentativo?.status || 'pendente',
+      formaPagamento: pagamentoRepresentativo?.forma_pagamento || null,
     });
   }
 
