@@ -7,9 +7,10 @@ import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { mascararTelefone } from '../utils/telefone.js';
 import { hojeISO } from '../utils/data.js';
 
-function horaAtual() {
-  const agora = new Date();
-  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+// Cobre qualquer data/hora no passado (não só "hoje mais cedo"), incluindo dias já passados.
+function dataHoraJaPassou(data, horaInicio) {
+  const alvo = new Date(`${data}T${horaInicio}:00`);
+  return alvo < new Date();
 }
 
 function formatarMoeda(v) {
@@ -141,7 +142,7 @@ export default function NovoAgendamento() {
       setErro('Preencha cliente, ao menos um serviço, data e horário.');
       return;
     }
-    if (data === hojeISO() && horaInicio < horaAtual()) {
+    if (dataHoraJaPassou(data, horaInicio)) {
       setAvisoHorarioPassado(true);
       return;
     }

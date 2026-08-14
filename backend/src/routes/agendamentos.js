@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
-import { calcularHoraFim, haSobreposicao } from '../utils/horarios.js';
+import { calcularHoraFim, haSobreposicao, timeToMinutes } from '../utils/horarios.js';
 
 const router = Router();
 
@@ -65,6 +65,9 @@ router.post('/', async (req, res) => {
   if (erroServico || !servico) return res.status(404).json({ erro: 'Serviço não encontrado.' });
 
   const hora_fim = calcularHoraFim(hora_inicio, servico.duracao_minutos);
+  if (timeToMinutes(hora_fim) > 24 * 60) {
+    return res.status(422).json({ erro: 'A duração total ultrapassa a meia-noite. Escolha um horário de início mais cedo.' });
+  }
 
   const conflito = await existeConflito(data, hora_inicio, hora_fim);
   if (conflito) return res.status(409).json({ erro: 'Esse horário já está ocupado.' });
@@ -102,6 +105,9 @@ router.put('/:id/remarcar', async (req, res) => {
   if (erroAtual || !agendamentoAtual) return res.status(404).json({ erro: 'Agendamento não encontrado.' });
 
   const hora_fim = calcularHoraFim(hora_inicio, agendamentoAtual.servicos.duracao_minutos);
+  if (timeToMinutes(hora_fim) > 24 * 60) {
+    return res.status(422).json({ erro: 'A duração total ultrapassa a meia-noite. Escolha um horário de início mais cedo.' });
+  }
 
   const conflito = await existeConflito(data, hora_inicio, hora_fim, req.params.id);
   if (conflito) return res.status(409).json({ erro: 'Esse horário já está ocupado.' });
