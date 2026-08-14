@@ -1,13 +1,8 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
-import { calcularHoraFim, dentroDoExpediente, haSobreposicao } from '../utils/horarios.js';
+import { calcularHoraFim, haSobreposicao } from '../utils/horarios.js';
 
 const router = Router();
-
-async function getConfiguracoes() {
-  const { data } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
-  return data;
-}
 
 // Checa conflito de horário para uma data, ignorando um agendamento específico (útil na remarcação)
 async function existeConflito(data, horaInicio, horaFim, ignorarId = null) {
@@ -55,7 +50,7 @@ router.get('/:id', async (req, res) => {
   res.json(data);
 });
 
-// POST /api/agendamentos -> cria um novo agendamento com checagem de expediente e conflito
+// POST /api/agendamentos -> cria um novo agendamento com checagem de conflito de horário
 router.post('/', async (req, res) => {
   const { cliente_id, servico_id, data, hora_inicio, observacao, grupo_id } = req.body;
   if (!cliente_id || !servico_id || !data || !hora_inicio) {
@@ -70,10 +65,6 @@ router.post('/', async (req, res) => {
   if (erroServico || !servico) return res.status(404).json({ erro: 'Serviço não encontrado.' });
 
   const hora_fim = calcularHoraFim(hora_inicio, servico.duracao_minutos);
-
-  const config = await getConfiguracoes();
-  const checagem = dentroDoExpediente(data, hora_inicio, hora_fim, config.horarios_funcionamento);
-  if (!checagem.ok) return res.status(422).json({ erro: checagem.motivo });
 
   const conflito = await existeConflito(data, hora_inicio, hora_fim);
   if (conflito) return res.status(409).json({ erro: 'Esse horário já está ocupado.' });
@@ -111,10 +102,6 @@ router.put('/:id/remarcar', async (req, res) => {
   if (erroAtual || !agendamentoAtual) return res.status(404).json({ erro: 'Agendamento não encontrado.' });
 
   const hora_fim = calcularHoraFim(hora_inicio, agendamentoAtual.servicos.duracao_minutos);
-
-  const config = await getConfiguracoes();
-  const checagem = dentroDoExpediente(data, hora_inicio, hora_fim, config.horarios_funcionamento);
-  if (!checagem.ok) return res.status(422).json({ erro: checagem.motivo });
 
   const conflito = await existeConflito(data, hora_inicio, hora_fim, req.params.id);
   if (conflito) return res.status(409).json({ erro: 'Esse horário já está ocupado.' });
