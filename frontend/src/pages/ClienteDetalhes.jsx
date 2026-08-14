@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
+import { agruparAgendamentos } from '../utils/agrupar.js';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -116,9 +117,14 @@ export default function ClienteDetalhes() {
   function linkWhatsapp() {
     if (!cliente?.telefone) return '#';
     const numero = cliente.telefone.replace(/\D/g, '');
-    const proximo = historico.find((h) => ['agendado', 'confirmado'].includes(h.status));
+    // Agrupa por grupo_id (quando vários serviços foram marcados juntos) e ordena
+    // por data+hora pra achar o próximo atendimento de verdade, não o mais distante.
+    const itens = agruparAgendamentos(historico).sort((a, b) =>
+      a.data === b.data ? a.hora_inicio.localeCompare(b.hora_inicio) : a.data.localeCompare(b.data)
+    );
+    const proximo = itens.find((it) => ['agendado', 'confirmado'].includes(it.status));
     const mensagem = proximo
-      ? `Olá ${cliente.nome}, tudo bem?\nEste é um lembrete para o seu atendimento, dia ${formatarDataMensagem(proximo.data)} às ${proximo.hora_inicio?.slice(0, 5)}.\nServiço: ${proximo.servicos?.nome || ''}\nPosso confirmar?  Obrigada ❤️`
+      ? `Olá ${cliente.nome}, tudo bem?\nEste é um lembrete para o seu atendimento, dia ${formatarDataMensagem(proximo.data)} às ${proximo.hora_inicio?.slice(0, 5)}.\nServiço: ${proximo.servicosNome}\nPosso confirmar?  Obrigada ❤️`
       : `Oi, ${cliente.nome}! Tudo bem? 💅`;
     const numeroComDDI = numero.startsWith('55') ? numero : `55${numero}`;
     return `https://wa.me/${numeroComDDI}?text=${encodeURIComponent(mensagem)}`;
