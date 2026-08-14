@@ -9,3 +9,8 @@
 alter table agendamentos add column if not exists grupo_id uuid;
 
 create index if not exists idx_agendamentos_grupo on agendamentos(grupo_id);
+
+-- Ordem do serviço dentro do grupo (necessário porque, quando um serviço no
+-- meio do grupo "vira o dia" pra depois da meia-noite, o horário sozinho não
+-- é suficiente pra saber a ordem certa: 00:30 é numericamente menor que 21:30).
+alter table agendamentos add column if not exists ordem integer not null default 0;

@@ -109,7 +109,8 @@ export default function Dashboard() {
             <div className="bg-plum-600 text-white rounded-xl2 p-4 mb-6">
               <p className="text-xs uppercase tracking-wide text-white/70 mb-1">Próximo atendimento</p>
               <p className="font-display font-semibold text-lg">
-                {proximoItem.hora_inicio}–{proximoItem.hora_fim} · {proximoItem.clientes?.nome}
+                {proximoItem.hora_inicio}–{proximoItem.hora_fim}
+                {proximoItem.terminaDiaSeguinte && ' (dia seguinte)'} · {proximoItem.clientes?.nome}
               </p>
               <p className="text-white/80 text-sm">
                 {proximoItem.servicosNome} · {formatarMoeda(proximoItem.valor)}
@@ -132,7 +133,8 @@ export default function Dashboard() {
                 <div key={item.ids.join('-')} className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center">
                   <div>
                     <p className="font-medium text-sm">
-                      {item.hora_inicio}–{item.hora_fim} · {item.clientes?.nome}
+                      {item.hora_inicio}–{item.hora_fim}
+                      {item.terminaDiaSeguinte && ' (dia seguinte)'} · {item.clientes?.nome}
                     </p>
                     <p className="text-xs text-ink/50">{item.servicosNome}</p>
                   </div>

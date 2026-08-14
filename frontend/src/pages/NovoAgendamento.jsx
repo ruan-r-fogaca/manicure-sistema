@@ -64,9 +64,10 @@ export default function NovoAgendamento() {
   const duracaoTotal = servicosSelecionados.reduce((soma, s) => soma + s.duracao_minutos, 0);
   const valorTotal = servicosSelecionados.reduce((soma, s) => soma + Number(s.preco), 0);
 
+  // Sem limite de horário: se passar da meia-noite, "dá a volta" pro dia seguinte.
   function somarMinutos(hora, minutos) {
     const [h, m] = hora.split(':').map(Number);
-    const totalMin = h * 60 + m + minutos;
+    const totalMin = ((h * 60 + m + minutos) % 1440 + 1440) % 1440;
     const hf = Math.floor(totalMin / 60).toString().padStart(2, '0');
     const mf = (totalMin % 60).toString().padStart(2, '0');
     return `${hf}:${mf}`;
@@ -75,6 +76,12 @@ export default function NovoAgendamento() {
   function calcularTermino() {
     if (servicosSelecionados.length === 0 || !horaInicio) return null;
     return somarMinutos(horaInicio, duracaoTotal);
+  }
+
+  function terminaNoDiaSeguinte() {
+    if (servicosSelecionados.length === 0 || !horaInicio) return false;
+    const [h, m] = horaInicio.split(':').map(Number);
+    return h * 60 + m + duracaoTotal >= 1440;
   }
 
   function alternarServico(id) {
@@ -110,7 +117,8 @@ export default function NovoAgendamento() {
       let inicioAtual = horaInicio;
       const idsCriados = [];
       let clienteCriado = null;
-      for (const servico of servicosSelecionados) {
+      for (let i = 0; i < servicosSelecionados.length; i++) {
+        const servico = servicosSelecionados[i];
         const criado = await api.post('/agendamentos', {
           cliente_id: clienteId,
           servico_id: servico.id,
@@ -118,6 +126,7 @@ export default function NovoAgendamento() {
           hora_inicio: inicioAtual,
           observacao,
           grupo_id: grupoId,
+          ordem: i,
         });
         idsCriados.push(criado.id);
         clienteCriado = criado.clientes;
@@ -277,7 +286,7 @@ export default function NovoAgendamento() {
           <div className="bg-plum-600/5 border border-plum-600/20 rounded-xl2 p-4 text-sm">
             <p className="font-display font-semibold text-plum-600 mb-1">Resumo</p>
             <p>Duração total: {duracaoTotal} min</p>
-            <p>Término: {termino}</p>
+            <p>Término: {termino}{terminaNoDiaSeguinte() && ' (dia seguinte)'}</p>
             <p>Valor total: {formatarMoeda(valorTotal)}</p>
           </div>
         )}

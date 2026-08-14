@@ -172,7 +172,8 @@ export default function Agenda() {
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
                       <p className="font-medium text-sm">
-                        {item.hora_inicio}–{item.hora_fim} · {item.clientes?.nome}
+                        {item.hora_inicio}–{item.hora_fim}
+                        {item.terminaDiaSeguinte && ' (dia seguinte)'} · {item.clientes?.nome}
                       </p>
                       <p className="text-xs text-ink/50">
                         {item.servicosNome} · {formatarMoeda(item.valor)}
