@@ -22,22 +22,18 @@ function inicioFimMes(dataRef) {
 }
 
 async function calcularFaturamento(inicio, fim) {
-  const { data: atendidos, error: erroAtendidos } = await supabase
-    .from('agendamentos')
-    .select('valor')
-    .eq('status', 'atendido')
-    .gte('data', inicio)
-    .lte('data', fim);
-  if (erroAtendidos) throw erroAtendidos;
-
   // -03:00 explícito: data_pagamento é timestamptz (instante real), então sem o
   // fuso a comparação assume UTC e desloca o dia perto da meia-noite no Brasil.
-  const { data: pagos, error: erroPagos } = await supabase
-    .from('pagamentos')
-    .select('valor, forma_pagamento, data_pagamento')
-    .eq('status', 'pago')
-    .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
-    .lte('data_pagamento', `${fim}T23:59:59-03:00`);
+  const [{ data: atendidos, error: erroAtendidos }, { data: pagos, error: erroPagos }] = await Promise.all([
+    supabase.from('agendamentos').select('valor').eq('status', 'atendido').gte('data', inicio).lte('data', fim),
+    supabase
+      .from('pagamentos')
+      .select('valor, forma_pagamento, data_pagamento')
+      .eq('status', 'pago')
+      .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
+      .lte('data_pagamento', `${fim}T23:59:59-03:00`),
+  ]);
+  if (erroAtendidos) throw erroAtendidos;
   if (erroPagos) throw erroPagos;
 
   const porFormaPagamento = { pix: 0, dinheiro: 0, credito: 0, debito: 0 };
@@ -53,11 +49,32 @@ async function calcularFaturamento(inicio, fim) {
 }
 
 async function origemPorTipo(inicio, fim, competencia) {
-  const { data: cobrancasMes, error: erroCobrancas } = await supabase
-    .from('cobrancas')
-    .select('valor_cobrado, tipo, status')
-    .eq('competencia', competencia);
+  // Filtra pelo tipo de cobrança do cliente pra não misturar pagamentos de
+  // atendimento avulso com visitas de clientes mensais (que já pagaram no fechamento).
+  const [
+    { data: cobrancasMes, error: erroCobrancas },
+    { data: avulsoAtendido, error: erroAvulso },
+    { data: avulsoPago, error: erroAvulsoPago },
+  ] = await Promise.all([
+    supabase.from('cobrancas').select('valor_cobrado, tipo, status').eq('competencia', competencia),
+    supabase
+      .from('agendamentos')
+      .select('valor, clientes!inner(tipo_cobranca)')
+      .eq('status', 'atendido')
+      .eq('clientes.tipo_cobranca', 'por_atendimento')
+      .gte('data', inicio)
+      .lte('data', fim),
+    supabase
+      .from('pagamentos')
+      .select('valor, agendamentos!inner(clientes!inner(tipo_cobranca))')
+      .eq('status', 'pago')
+      .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento')
+      .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
+      .lte('data_pagamento', `${fim}T23:59:59-03:00`),
+  ]);
   if (erroCobrancas) throw erroCobrancas;
+  if (erroAvulso) throw erroAvulso;
+  if (erroAvulsoPago) throw erroAvulsoPago;
 
   const somaTipo = (tipo, filtroStatus) =>
     cobrancasMes
@@ -74,26 +91,6 @@ async function origemPorTipo(inicio, fim, competencia) {
     pago: somaTipo('mensal_por_servico', ['pago']),
     pendente: somaTipo('mensal_por_servico', ['pendente', 'atrasado']),
   };
-
-  const { data: avulsoAtendido, error: erroAvulso } = await supabase
-    .from('agendamentos')
-    .select('valor, clientes!inner(tipo_cobranca)')
-    .eq('status', 'atendido')
-    .eq('clientes.tipo_cobranca', 'por_atendimento')
-    .gte('data', inicio)
-    .lte('data', fim);
-  if (erroAvulso) throw erroAvulso;
-
-  // Filtra pelo tipo de cobrança do cliente pra não misturar pagamentos de
-  // atendimento avulso com visitas de clientes mensais (que já pagaram no fechamento).
-  const { data: avulsoPago, error: erroAvulsoPago } = await supabase
-    .from('pagamentos')
-    .select('valor, agendamentos!inner(clientes!inner(tipo_cobranca))')
-    .eq('status', 'pago')
-    .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento')
-    .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
-    .lte('data_pagamento', `${fim}T23:59:59-03:00`);
-  if (erroAvulsoPago) throw erroAvulsoPago;
 
   const avulso = {
     cobrado: avulsoAtendido.reduce((s, a) => s + Number(a.valor), 0),
@@ -127,18 +124,19 @@ router.get('/', async (req, res) => {
     // "pendente" é criado assim que o agendamento é marcado, então sem os filtros de
     // status='atendido' e tipo_cobranca isso contaria até serviço que nem aconteceu
     // ainda, ou visita de cliente mensal (que já pagou no fechamento do mês).
-    const { data: pendentesAvulso, error: erroPendentes } = await supabase
-      .from('pagamentos')
-      .select('valor, agendamentos!inner(status, clientes!inner(tipo_cobranca))')
-      .eq('status', 'pendente')
-      .eq('agendamentos.status', 'atendido')
-      .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento');
+    const [
+      { data: pendentesAvulso, error: erroPendentes },
+      { data: pendentesMensais, error: erroPendentesMensais },
+    ] = await Promise.all([
+      supabase
+        .from('pagamentos')
+        .select('valor, agendamentos!inner(status, clientes!inner(tipo_cobranca))')
+        .eq('status', 'pendente')
+        .eq('agendamentos.status', 'atendido')
+        .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento'),
+      supabase.from('cobrancas').select('valor_cobrado').in('status', ['pendente', 'atrasado']),
+    ]);
     if (erroPendentes) throw erroPendentes;
-
-    const { data: pendentesMensais, error: erroPendentesMensais } = await supabase
-      .from('cobrancas')
-      .select('valor_cobrado')
-      .in('status', ['pendente', 'atrasado']);
     if (erroPendentesMensais) throw erroPendentesMensais;
 
     const totalPendente =
@@ -181,57 +179,55 @@ router.post('/fechamento', async (req, res) => {
     const inicio = competencia;
     const fim = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-    const { data: clientesMensais, error: erroClientes } = await supabase
-      .from('clientes')
-      .select('*')
-      .eq('ativo', true)
-      .in('tipo_cobranca', ['mensal_fixo', 'mensal_por_servico']);
+    const [
+      { data: clientesMensais, error: erroClientes },
+      { data: jaFechadas, error: erroExistentes },
+    ] = await Promise.all([
+      supabase.from('clientes').select('*').eq('ativo', true).in('tipo_cobranca', ['mensal_fixo', 'mensal_por_servico']),
+      supabase.from('cobrancas').select('cliente_id').eq('competencia', competencia),
+    ]);
     if (erroClientes) throw erroClientes;
-
-    const { data: jaFechadas, error: erroExistentes } = await supabase
-      .from('cobrancas')
-      .select('cliente_id')
-      .eq('competencia', competencia);
     if (erroExistentes) throw erroExistentes;
     const idsJaFechados = new Set(jaFechadas.map((c) => c.cliente_id));
 
-    const criadas = [];
-    for (const cliente of clientesMensais) {
-      if (idsJaFechados.has(cliente.id)) continue;
+    const candidatos = clientesMensais.filter((cliente) => !idsJaFechados.has(cliente.id));
 
-      let valor = 0;
-      let quantidade = null;
+    const criadas = await Promise.all(
+      candidatos.map(async (cliente) => {
+        let valor = 0;
+        let quantidade = null;
 
-      if (cliente.tipo_cobranca === 'mensal_fixo') {
-        valor = Number(cliente.valor_mensal_fixo || 0);
-      } else {
-        const { data: atendimentos, error: erroAt } = await supabase
-          .from('agendamentos')
-          .select('id')
-          .eq('cliente_id', cliente.id)
-          .eq('status', 'atendido')
-          .gte('data', inicio)
-          .lte('data', fim);
-        if (erroAt) throw erroAt;
-        quantidade = atendimentos.length;
-        valor = quantidade * Number(cliente.valor_por_servico || 0);
-      }
+        if (cliente.tipo_cobranca === 'mensal_fixo') {
+          valor = Number(cliente.valor_mensal_fixo || 0);
+        } else {
+          const { data: atendimentos, error: erroAt } = await supabase
+            .from('agendamentos')
+            .select('id')
+            .eq('cliente_id', cliente.id)
+            .eq('status', 'atendido')
+            .gte('data', inicio)
+            .lte('data', fim);
+          if (erroAt) throw erroAt;
+          quantidade = atendimentos.length;
+          valor = quantidade * Number(cliente.valor_por_servico || 0);
+        }
 
-      const { data: nova, error: erroInsert } = await supabase
-        .from('cobrancas')
-        .insert({
-          cliente_id: cliente.id,
-          competencia,
-          tipo: cliente.tipo_cobranca,
-          quantidade_atendimentos: quantidade,
-          valor_cobrado: valor,
-          status: 'pendente',
-        })
-        .select('*, clientes(nome, telefone)')
-        .single();
-      if (erroInsert) throw erroInsert;
-      criadas.push(nova);
-    }
+        const { data: nova, error: erroInsert } = await supabase
+          .from('cobrancas')
+          .insert({
+            cliente_id: cliente.id,
+            competencia,
+            tipo: cliente.tipo_cobranca,
+            quantidade_atendimentos: quantidade,
+            valor_cobrado: valor,
+            status: 'pendente',
+          })
+          .select('*, clientes(nome, telefone)')
+          .single();
+        if (erroInsert) throw erroInsert;
+        return nova;
+      })
+    );
 
     res.status(201).json({ competencia: competenciaStr, criadas, ignoradas_ja_fechadas: idsJaFechados.size });
   } catch (error) {

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import compression from 'compression';
 
 import clientesRouter from './routes/clientes.js';
 import servicosRouter from './routes/servicos.js';
@@ -17,6 +18,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({ origin: process.env.FRONTEND_URL || '*' }));
+app.use(compression());
 app.use(express.json());
 
 app.get('/', (req, res) => {

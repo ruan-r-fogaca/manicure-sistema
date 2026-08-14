@@ -22,9 +22,6 @@ router.get('/', async (req, res) => {
 
   const proximo = agendamentosHoje.find((a) => ['agendado', 'confirmado'].includes(a.status));
 
-  // Horários disponíveis restantes hoje (estimativa simplificada: conta slots livres de 30 min no expediente)
-  const { data: config } = await supabase.from('configuracoes').select('*').eq('id', 1).single();
-
   res.json({
     data: hoje,
     total_atendimentos: agendamentosHoje.length,
@@ -32,7 +29,6 @@ router.get('/', async (req, res) => {
     faturamento_hoje: faturamentoHoje,
     proximo_atendimento: proximo || null,
     agenda_do_dia: agendamentosHoje,
-    horarios_funcionamento_hoje: config?.horarios_funcionamento,
   });
 });
 

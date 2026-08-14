@@ -36,21 +36,18 @@ router.get('/', async (req, res) => {
 });
 
 router.get('/:id', async (req, res) => {
-  const { data: cliente, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .eq('id', req.params.id)
-    .single();
+  const [{ data: cliente, error }, { data: ultimoAtendimento }] = await Promise.all([
+    supabase.from('clientes').select('*').eq('id', req.params.id).single(),
+    supabase
+      .from('agendamentos')
+      .select('*, servicos(nome)')
+      .eq('cliente_id', req.params.id)
+      .eq('status', 'atendido')
+      .order('data', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
   if (error) return res.status(404).json({ erro: 'Cliente não encontrada.' });
-
-  const { data: ultimoAtendimento } = await supabase
-    .from('agendamentos')
-    .select('*, servicos(nome)')
-    .eq('cliente_id', req.params.id)
-    .eq('status', 'atendido')
-    .order('data', { ascending: false })
-    .limit(1)
-    .maybeSingle();
 
   res.json({ ...cliente, ultimo_atendimento: ultimoAtendimento || null });
 });
@@ -77,34 +74,32 @@ router.get('/fixas/proximas', async (req, res) => {
   if (error) return res.status(500).json({ erro: error.message });
 
   const hoje = new Date();
-  const resultado = [];
-  for (const cliente of data) {
-    const { data: ultimo } = await supabase
-      .from('agendamentos')
-      .select('data')
-      .eq('cliente_id', cliente.id)
-      .eq('status', 'atendido')
-      .order('data', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const entradas = await Promise.all(
+    data.map(async (cliente) => {
+      const { data: ultimo } = await supabase
+        .from('agendamentos')
+        .select('data')
+        .eq('cliente_id', cliente.id)
+        .eq('status', 'atendido')
+        .order('data', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    let entrada = { ...cliente, proxima_data_sugerida: null, dias_restantes: null };
+      const entrada = { ...cliente, proxima_data_sugerida: null, dias_restantes: null };
+      if (ultimo && cliente.frequencia_dias) {
+        const dataUltimo = new Date(ultimo.data + 'T12:00:00');
+        const proximaData = new Date(dataUltimo);
+        proximaData.setDate(proximaData.getDate() + cliente.frequencia_dias);
+        entrada.proxima_data_sugerida = proximaData.toISOString().slice(0, 10);
+        entrada.dias_restantes = Math.ceil((proximaData - hoje) / (1000 * 60 * 60 * 24));
+      }
+      return entrada;
+    })
+  );
 
-    if (ultimo && cliente.frequencia_dias) {
-      const dataUltimo = new Date(ultimo.data + 'T12:00:00');
-      const proximaData = new Date(dataUltimo);
-      proximaData.setDate(proximaData.getDate() + cliente.frequencia_dias);
-      const diasRestantes = Math.ceil((proximaData - hoje) / (1000 * 60 * 60 * 24));
-      entrada.proxima_data_sugerida = proximaData.toISOString().slice(0, 10);
-      entrada.dias_restantes = diasRestantes;
-
-      if (apenasProximas && diasRestantes > 3) continue;
-    } else if (apenasProximas) {
-      continue;
-    }
-
-    resultado.push(entrada);
-  }
+  const resultado = apenasProximas
+    ? entradas.filter((e) => e.dias_restantes !== null && e.dias_restantes <= 3)
+    : entradas;
   res.json(resultado);
 });
 
