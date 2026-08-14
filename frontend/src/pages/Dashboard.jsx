@@ -106,7 +106,7 @@ export default function Dashboard() {
           )}
 
           {proximoItem && (
-            <div className="bg-plum-600 text-white rounded-xl2 p-4 mb-6">
+            <div className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-xl2 p-4 mb-6">
               <p className="text-xs uppercase tracking-wide text-white/70 mb-1">Próximo atendimento</p>
               <p className="font-display font-semibold text-lg">
                 {proximoItem.hora_inicio}–{proximoItem.hora_fim}

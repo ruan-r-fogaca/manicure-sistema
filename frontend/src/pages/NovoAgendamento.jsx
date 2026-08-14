@@ -186,7 +186,7 @@ export default function NovoAgendamento() {
             <button
               type="button"
               onClick={() => setMostrarNovoCliente((v) => !v)}
-              className="w-11 h-11 flex items-center justify-center bg-plum-600 text-white rounded-lg text-lg font-medium shrink-0"
+              className="w-11 h-11 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
               aria-label="Adicionar nova cliente"
               title="Adicionar nova cliente"
             >
@@ -219,7 +219,7 @@ export default function NovoAgendamento() {
                   type="button"
                   onClick={handleAdicionarCliente}
                   disabled={salvandoCliente}
-                  className="flex-1 bg-plum-600 text-white text-sm font-medium rounded-lg py-2 disabled:opacity-60"
+                  className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium rounded-lg py-2 disabled:opacity-60"
                 >
                   {salvandoCliente ? 'Salvando...' : 'Salvar cliente'}
                 </button>
@@ -294,7 +294,7 @@ export default function NovoAgendamento() {
         <button
           type="submit"
           disabled={enviando}
-          className="bg-plum-600 text-white font-medium rounded-lg py-3 mt-2 disabled:opacity-60"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 font-medium rounded-lg py-3 mt-2 disabled:opacity-60"
         >
           {enviando ? 'Salvando...' : 'Confirmar agendamento'}
         </button>
@@ -314,7 +314,7 @@ export default function NovoAgendamento() {
                   setAvisoHorarioPassado(false);
                   criarAgendamentos(true);
                 }}
-                className="flex-1 bg-plum-600 text-white rounded-lg py-2.5 font-medium"
+                className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2.5 font-medium"
               >
                 Sim
               </button>

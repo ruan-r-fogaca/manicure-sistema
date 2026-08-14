@@ -67,7 +67,7 @@ export default function ClientesFixas() {
                 <div className="flex gap-2">
                   <Link
                     to={`/agenda/novo?cliente=${c.id}`}
-                    className="flex-1 bg-plum-600 text-white text-sm font-medium text-center rounded-lg py-2"
+                    className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium text-center rounded-lg py-2"
                   >
                     Agendar
                   </Link>

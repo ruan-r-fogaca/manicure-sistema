@@ -119,7 +119,7 @@ export default function Agenda() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Agenda</h1>
         <Link
           to="/agenda/novo"
-          className="bg-plum-600 text-white text-sm font-medium px-3 py-2 rounded-lg shadow-sm"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg shadow-sm"
         >
           + Novo agendamento
         </Link>
@@ -132,7 +132,7 @@ export default function Agenda() {
               key={v}
               onClick={() => selecionarVisao(v)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-                !dataEscolhida && visao === v ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
+                !dataEscolhida && visao === v ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 border-plum-600' : 'bg-white text-ink/60 border-base-200'
               }`}
             >
               {v}

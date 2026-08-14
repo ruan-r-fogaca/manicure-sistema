@@ -368,7 +368,7 @@ export default function Financeiro() {
             key={a}
             onClick={() => setAba(a)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-              aba === a ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
+              aba === a ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 border-plum-600' : 'bg-white text-ink/60 border-base-200'
             }`}
           >
             {a}
@@ -441,7 +441,7 @@ export default function Financeiro() {
             <button
               onClick={gerarFechamento}
               disabled={gerando}
-              className="bg-plum-600 text-white text-sm font-medium px-4 py-2.5 rounded-lg disabled:opacity-60 whitespace-nowrap"
+              className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-4 py-2.5 rounded-lg disabled:opacity-60 whitespace-nowrap"
             >
               {gerando ? 'Gerando...' : 'Gerar cobranças'}
             </button>

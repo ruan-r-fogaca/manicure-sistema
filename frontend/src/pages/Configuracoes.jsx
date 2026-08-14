@@ -89,7 +89,7 @@ export default function Configuracoes() {
         <h2 className="font-display font-semibold text-lg">Serviços</h2>
         <button
           onClick={() => setCriandoServico({ nome: '', preco: '', duracao_minutos: '', ativo: true })}
-          className="w-8 h-8 flex items-center justify-center bg-plum-600 text-white rounded-lg text-lg font-medium shrink-0"
+          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
           aria-label="Adicionar novo serviço"
           title="Adicionar novo serviço"
         >
@@ -134,7 +134,7 @@ export default function Configuracoes() {
         <h2 className="font-display font-semibold text-lg">Mensagens</h2>
         <button
           onClick={() => setCriandoMensagem({ nome: '', texto: '' })}
-          className="w-8 h-8 flex items-center justify-center bg-plum-600 text-white rounded-lg text-lg font-medium shrink-0"
+          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
           aria-label="Adicionar novo modelo de mensagem"
           title="Adicionar novo modelo de mensagem"
         >
@@ -204,7 +204,7 @@ function MensagemForm({ mensagem, onChange, onSalvar, onCancelar }) {
         placeholder="Olá {nome}, tudo bem?..."
       />
       <div className="flex gap-2">
-        <button onClick={onSalvar} className="flex-1 bg-plum-600 text-white rounded-lg py-2 text-sm font-medium">
+        <button onClick={onSalvar} className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2 text-sm font-medium">
           Salvar
         </button>
         <button onClick={onCancelar} className="flex-1 bg-base-100 rounded-lg py-2 text-sm font-medium">
@@ -245,7 +245,7 @@ function ServicoForm({ servico, onChange, onSalvar, onCancelar }) {
         Ativo
       </label>
       <div className="flex gap-2">
-        <button onClick={onSalvar} className="flex-1 bg-plum-600 text-white rounded-lg py-2 text-sm font-medium">
+        <button onClick={onSalvar} className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2 text-sm font-medium">
           Salvar
         </button>
         <button onClick={onCancelar} className="flex-1 bg-base-100 rounded-lg py-2 text-sm font-medium">

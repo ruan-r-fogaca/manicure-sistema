@@ -11,7 +11,7 @@ import Configuracoes from './pages/Configuracoes.jsx';
 
 export default function App() {
   return (
-    <div className="max-w-lg mx-auto min-h-screen bg-base-50 pb-24">
+    <div className="max-w-lg mx-auto min-h-screen app-shell pb-24">
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/agenda" element={<Agenda />} />

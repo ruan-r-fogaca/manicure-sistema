@@ -209,7 +209,7 @@ export default function ClienteDetalhes() {
           <div className="flex gap-2 mt-4">
             <Link
               to={`/agenda/novo?cliente=${cliente.id}`}
-              className="flex-1 bg-plum-600 text-white text-sm font-medium text-center rounded-lg py-2.5"
+              className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium text-center rounded-lg py-2.5"
             >
               Novo agendamento
             </Link>
@@ -319,7 +319,7 @@ export default function ClienteDetalhes() {
           </div>
 
           <div className="flex gap-2">
-            <button type="submit" className="flex-1 bg-plum-600 text-white rounded-lg py-2.5 font-medium">
+            <button type="submit" className="flex-1 bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2.5 font-medium">
               Salvar
             </button>
             <button type="button" onClick={() => setEditando(false)} className="flex-1 bg-base-100 rounded-lg py-2.5 font-medium">

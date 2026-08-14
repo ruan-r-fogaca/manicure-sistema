@@ -90,7 +90,7 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
                     type="button"
                     onClick={() => selecionar(dia)}
                     className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
-                      selecionado ? 'bg-plum-600 text-white font-medium' : 'text-ink/70 hover:bg-base-100'
+                      selecionado ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 font-medium' : 'text-ink/70 hover:bg-base-100'
                     }`}
                   >
                     {dia}

@@ -62,7 +62,7 @@ export default function Clientes() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Clientes</h1>
         <button
           onClick={() => setMostrarForm(!mostrarForm)}
-          className="bg-plum-600 text-white text-sm font-medium px-3 py-2 rounded-lg"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg"
         >
           {mostrarForm ? 'Cancelar' : '+ Nova'}
         </button>
@@ -93,7 +93,7 @@ export default function Clientes() {
             onChange={(e) => setNovoTelefone(mascararTelefone(e.target.value))}
             className="border border-base-200 rounded-lg px-3 py-2.5"
           />
-          <button disabled={salvando} className="bg-plum-600 text-white rounded-lg py-2.5 font-medium disabled:opacity-60">
+          <button disabled={salvando} className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2.5 font-medium disabled:opacity-60">
             {salvando ? 'Salvando...' : 'Salvar cliente'}
           </button>
           <p className="text-xs text-ink/40 -mt-1">
@@ -115,7 +115,7 @@ export default function Clientes() {
             key={a.valor}
             onClick={() => setAba(a.valor)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium border ${
-              aba === a.valor ? 'bg-plum-600 text-white border-plum-600' : 'bg-white text-ink/60 border-base-200'
+              aba === a.valor ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 border-plum-600' : 'bg-white text-ink/60 border-base-200'
             }`}
           >
             {a.texto}
