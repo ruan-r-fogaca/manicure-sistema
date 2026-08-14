@@ -7,6 +7,7 @@ import PagamentoModal from '../components/PagamentoModal.jsx';
 import MiniCalendario from '../components/MiniCalendario.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { dataParaISO } from '../utils/data.js';
+import { agruparAgendamentos } from '../utils/agrupar.js';
 
 const VISOES = ['Hoje', 'Amanhã', 'Semana'];
 
@@ -82,18 +83,20 @@ export default function Agenda() {
     cancelarPagamento,
   } = usePagamentoFlow({ aoAtualizar: carregar });
 
+  const itens = useMemo(() => agruparAgendamentos(agendamentos), [agendamentos]);
+
   const agrupadosPorDia = useMemo(() => {
     const grupos = {};
-    for (const a of agendamentos) {
-      if (!grupos[a.data]) grupos[a.data] = [];
-      grupos[a.data].push(a);
+    for (const item of itens) {
+      if (!grupos[item.data]) grupos[item.data] = [];
+      grupos[item.data].push(item);
     }
     return grupos;
-  }, [agendamentos]);
+  }, [itens]);
 
-  async function mudarStatus(agendamento, status) {
+  async function mudarStatus(item, status) {
     try {
-      await solicitarMudancaStatus(agendamento, status);
+      await solicitarMudancaStatus(item, status);
     } catch (e) {
       setErro(e.message);
     }
@@ -153,10 +156,10 @@ export default function Agenda() {
 
       {carregando ? (
         <Carregando />
-      ) : agendamentos.length === 0 ? (
+      ) : itens.length === 0 ? (
         <Vazio titulo="Nada por aqui" descricao="Não há agendamentos para esse período." />
       ) : (
-        Object.entries(agrupadosPorDia).map(([dia, itens]) => (
+        Object.entries(agrupadosPorDia).map(([dia, itensDoDia]) => (
           <div key={dia} className="mb-5">
             {mostrarCabecalhoPorDia && (
               <p className="text-xs font-semibold uppercase tracking-wide text-ink/40 mb-2">
@@ -164,18 +167,18 @@ export default function Agenda() {
               </p>
             )}
             <div className="flex flex-col gap-2">
-              {itens.map((a) => (
-                <div key={a.id} className="bg-white rounded-xl2 p-3 border border-base-200">
+              {itensDoDia.map((item) => (
+                <div key={item.ids.join('-')} className="bg-white rounded-xl2 p-3 border border-base-200">
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
                       <p className="font-medium text-sm">
-                        {a.hora_inicio}–{a.hora_fim} · {a.clientes?.nome}
+                        {item.hora_inicio}–{item.hora_fim} · {item.clientes?.nome}
                       </p>
                       <p className="text-xs text-ink/50">
-                        {a.servicos?.nome} · {formatarMoeda(a.valor)}
+                        {item.servicosNome} · {formatarMoeda(item.valor)}
                       </p>
                     </div>
-                    <StatusSelect status={a.status} onChange={(novoStatus) => mudarStatus(a, novoStatus)} />
+                    <StatusSelect status={item.status} onChange={(novoStatus) => mudarStatus(item, novoStatus)} />
                   </div>
                 </div>
               ))}

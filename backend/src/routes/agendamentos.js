@@ -57,7 +57,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/agendamentos -> cria um novo agendamento com checagem de expediente e conflito
 router.post('/', async (req, res) => {
-  const { cliente_id, servico_id, data, hora_inicio, observacao } = req.body;
+  const { cliente_id, servico_id, data, hora_inicio, observacao, grupo_id } = req.body;
   if (!cliente_id || !servico_id || !data || !hora_inicio) {
     return res.status(400).json({ erro: 'cliente_id, servico_id, data e hora_inicio são obrigatórios.' });
   }
@@ -88,6 +88,7 @@ router.post('/', async (req, res) => {
       hora_fim,
       valor: servico.preco,
       observacao,
+      grupo_id: grupo_id || null,
       status: 'agendado',
     })
     .select('*, clientes(nome, telefone), servicos(nome)')

@@ -1,9 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client.js';
-import { Erro } from '../components/Estado.jsx';
+import { Erro, Sucesso } from '../components/Estado.jsx';
+import PagamentoModal from '../components/PagamentoModal.jsx';
+import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { mascararTelefone } from '../utils/telefone.js';
 import { hojeISO } from '../utils/data.js';
+
+function horaAtual() {
+  const agora = new Date();
+  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+}
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -24,6 +31,17 @@ export default function NovoAgendamento() {
 
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [avisoHorarioPassado, setAvisoHorarioPassado] = useState(false);
+
+  const {
+    agendamentoPendente,
+    enviando: enviandoPagamento,
+    erroModal,
+    mensagemSucesso,
+    solicitarMudancaStatus,
+    confirmarPagamento,
+    cancelarPagamento,
+  } = usePagamentoFlow({ aoAtualizar: () => {} });
 
   // Adicionar cliente rápido (botão "+" ao lado do select de cliente)
   const [mostrarNovoCliente, setMostrarNovoCliente] = useState(false);
@@ -84,32 +102,50 @@ export default function NovoAgendamento() {
     }
   }
 
-  async function handleSubmit(e) {
+  async function criarAgendamentos(forcarAtendido) {
+    setEnviando(true);
+    try {
+      const grupoId = servicosSelecionados.length > 1 ? crypto.randomUUID() : null;
+      let inicioAtual = horaInicio;
+      const idsCriados = [];
+      let clienteCriado = null;
+      for (const servico of servicosSelecionados) {
+        const criado = await api.post('/agendamentos', {
+          cliente_id: clienteId,
+          servico_id: servico.id,
+          data,
+          hora_inicio: inicioAtual,
+          observacao,
+          grupo_id: grupoId,
+        });
+        idsCriados.push(criado.id);
+        clienteCriado = criado.clientes;
+        inicioAtual = somarMinutos(inicioAtual, servico.duracao_minutos);
+      }
+      if (forcarAtendido) {
+        await solicitarMudancaStatus({ ids: idsCriados, clientes: clienteCriado }, 'atendido');
+      } else {
+        navigate('/agenda');
+      }
+    } catch (e) {
+      setErro(e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  function handleSubmit(e) {
     e.preventDefault();
     setErro('');
     if (!clienteId || servicoIds.length === 0 || !data || !horaInicio) {
       setErro('Preencha cliente, ao menos um serviço, data e horário.');
       return;
     }
-    setEnviando(true);
-    try {
-      let inicioAtual = horaInicio;
-      for (const servico of servicosSelecionados) {
-        await api.post('/agendamentos', {
-          cliente_id: clienteId,
-          servico_id: servico.id,
-          data,
-          hora_inicio: inicioAtual,
-          observacao,
-        });
-        inicioAtual = somarMinutos(inicioAtual, servico.duracao_minutos);
-      }
-      navigate('/agenda');
-    } catch (e) {
-      setErro(e.message);
-    } finally {
-      setEnviando(false);
+    if (data === hojeISO() && horaInicio < horaAtual()) {
+      setAvisoHorarioPassado(true);
+      return;
     }
+    criarAgendamentos(false);
   }
 
   const termino = calcularTermino();
@@ -119,6 +155,7 @@ export default function NovoAgendamento() {
       <h1 className="font-display font-semibold text-2xl text-plum-600 mb-5">Novo agendamento</h1>
 
       <Erro mensagem={erro} />
+      <Sucesso mensagem={mensagemSucesso} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
@@ -252,6 +289,45 @@ export default function NovoAgendamento() {
           {enviando ? 'Salvando...' : 'Confirmar agendamento'}
         </button>
       </form>
+
+      {avisoHorarioPassado && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
+          <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-5 pb-6">
+            <h2 className="font-display font-semibold text-lg mb-1">Esse horário já passou ⏰</h2>
+            <p className="text-sm text-ink/50 mb-4">
+              Você está agendando para um horário anterior ao momento atual. Deseja continuar mesmo assim?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setAvisoHorarioPassado(false);
+                  criarAgendamentos(true);
+                }}
+                className="flex-1 bg-plum-600 text-white rounded-lg py-2.5 font-medium"
+              >
+                Sim
+              </button>
+              <button
+                type="button"
+                onClick={() => setAvisoHorarioPassado(false)}
+                className="flex-1 bg-base-100 rounded-lg py-2.5 font-medium"
+              >
+                Não
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <PagamentoModal
+        aberto={!!agendamentoPendente}
+        agendamento={agendamentoPendente}
+        enviando={enviandoPagamento}
+        erro={erroModal}
+        onSelecionar={confirmarPagamento}
+        onFechar={cancelarPagamento}
+      />
     </div>
   );
 }

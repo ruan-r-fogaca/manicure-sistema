@@ -5,6 +5,7 @@ import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
 import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
+import { agruparAgendamentos } from '../utils/agrupar.js';
 
 function formatarMoeda(valor) {
   return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -49,15 +50,20 @@ export default function Dashboard() {
     cancelarPagamento,
   } = usePagamentoFlow({ aoAtualizar: carregar });
 
-  async function mudarStatus(agendamento, status) {
+  async function mudarStatus(item, status) {
     try {
-      await solicitarMudancaStatus(agendamento, status);
+      await solicitarMudancaStatus(item, status);
     } catch (e) {
       setErro(e.message);
     }
   }
 
   if (carregando) return <Carregando />;
+
+  const itensHoje = resumo ? agruparAgendamentos(resumo.agenda_do_dia) : [];
+  const proximoItem = resumo?.proximo_atendimento
+    ? itensHoje.find((it) => it.ids.includes(resumo.proximo_atendimento.id))
+    : null;
 
   return (
     <div className="px-5 pt-8">
@@ -99,14 +105,14 @@ export default function Dashboard() {
             </Link>
           )}
 
-          {resumo.proximo_atendimento && (
+          {proximoItem && (
             <div className="bg-plum-600 text-white rounded-xl2 p-4 mb-6">
               <p className="text-xs uppercase tracking-wide text-white/70 mb-1">Próximo atendimento</p>
               <p className="font-display font-semibold text-lg">
-                {resumo.proximo_atendimento.hora_inicio} · {resumo.proximo_atendimento.clientes?.nome}
+                {proximoItem.hora_inicio}–{proximoItem.hora_fim} · {proximoItem.clientes?.nome}
               </p>
               <p className="text-white/80 text-sm">
-                {resumo.proximo_atendimento.servicos?.nome} · {formatarMoeda(resumo.proximo_atendimento.valor)}
+                {proximoItem.servicosNome} · {formatarMoeda(proximoItem.valor)}
               </p>
             </div>
           )}
@@ -118,21 +124,21 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {resumo.agenda_do_dia.length === 0 ? (
+          {itensHoje.length === 0 ? (
             <p className="text-sm text-ink/50 py-6 text-center">Nenhum atendimento hoje ainda.</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {resumo.agenda_do_dia.map((a) => (
-                <div key={a.id} className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center">
+              {itensHoje.map((item) => (
+                <div key={item.ids.join('-')} className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center">
                   <div>
                     <p className="font-medium text-sm">
-                      {a.hora_inicio} · {a.clientes?.nome}
+                      {item.hora_inicio}–{item.hora_fim} · {item.clientes?.nome}
                     </p>
-                    <p className="text-xs text-ink/50">{a.servicos?.nome}</p>
+                    <p className="text-xs text-ink/50">{item.servicosNome}</p>
                   </div>
                   {/* Tocar no badge de status já deixa trocar pra qualquer outro,
                       sem precisar ir na tela de clientes. */}
-                  <StatusSelect status={a.status} onChange={(novoStatus) => mudarStatus(a, novoStatus)} />
+                  <StatusSelect status={item.status} onChange={(novoStatus) => mudarStatus(item, novoStatus)} />
                 </div>
               ))}
             </div>

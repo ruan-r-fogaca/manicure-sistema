@@ -120,7 +120,8 @@ export default function ClienteDetalhes() {
     const mensagem = proximo
       ? `Olá ${cliente.nome}, tudo bem?\nEste é um lembrete para o seu atendimento, dia ${formatarDataMensagem(proximo.data)} às ${proximo.hora_inicio?.slice(0, 5)}.\nServiço: ${proximo.servicos?.nome || ''}\nPosso confirmar?  Obrigada ❤️`
       : `Oi, ${cliente.nome}! Tudo bem? 💅`;
-    return `https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`;
+    const numeroComDDI = numero.startsWith('55') ? numero : `55${numero}`;
+    return `https://wa.me/${numeroComDDI}?text=${encodeURIComponent(mensagem)}`;
   }
 
   if (carregando) return <Carregando />;
