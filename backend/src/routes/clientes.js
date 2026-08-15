@@ -5,6 +5,18 @@ const router = Router();
 
 const TIPOS_COBRANCA = ['por_atendimento', 'mensal_fixo', 'mensal_por_servico'];
 
+const MENSAGEM_NOME_DUPLICADO = 'Já existe uma cliente cadastrada com esse nome. Insira um sobrenome pra diferenciar.';
+
+// Checa se já existe cliente com esse nome (ignorando maiúsculas/minúsculas e
+// espaços nas pontas). excluirId serve pra edição não bater com ela mesma.
+async function nomeJaExiste(nome, excluirId) {
+  let query = supabase.from('clientes').select('id').ilike('nome', nome.trim()).limit(1);
+  if (excluirId) query = query.neq('id', excluirId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data.length > 0;
+}
+
 function validarCobranca(body) {
   const { tipo_cobranca, valor_mensal_fixo, valor_por_servico, dia_cobranca } = body;
   if (tipo_cobranca !== undefined && !TIPOS_COBRANCA.includes(tipo_cobranca)) {
@@ -122,10 +134,16 @@ router.post('/', async (req, res) => {
   const erroCobranca = validarCobranca(req.body);
   if (erroCobranca) return res.status(400).json({ erro: erroCobranca });
 
+  try {
+    if (await nomeJaExiste(nome)) return res.status(400).json({ erro: MENSAGEM_NOME_DUPLICADO });
+  } catch (error) {
+    return res.status(500).json({ erro: error.message });
+  }
+
   const { data, error } = await supabase
     .from('clientes')
     .insert({
-      nome,
+      nome: nome.trim(),
       telefone,
       cliente_fixa,
       frequencia_dias,
@@ -163,7 +181,23 @@ router.put('/:id', async (req, res) => {
   const erroCobranca = validarCobranca(req.body);
   if (erroCobranca) return res.status(400).json({ erro: erroCobranca });
 
-  const payload = { nome, telefone, cliente_fixa, frequencia_dias, servico_habitual_id, horario_habitual, observacoes };
+  if (nome) {
+    try {
+      if (await nomeJaExiste(nome, req.params.id)) return res.status(400).json({ erro: MENSAGEM_NOME_DUPLICADO });
+    } catch (error) {
+      return res.status(500).json({ erro: error.message });
+    }
+  }
+
+  const payload = {
+    nome: nome ? nome.trim() : nome,
+    telefone,
+    cliente_fixa,
+    frequencia_dias,
+    servico_habitual_id,
+    horario_habitual,
+    observacoes,
+  };
   if (ativo !== undefined) payload.ativo = ativo;
   if (tipo_cobranca !== undefined) {
     payload.tipo_cobranca = tipo_cobranca;
