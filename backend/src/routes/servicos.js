@@ -16,13 +16,13 @@ router.get('/', async (req, res) => {
 
 // POST /api/servicos
 router.post('/', async (req, res) => {
-  const { nome, preco, duracao_minutos, ativo = true } = req.body;
+  const { nome, preco, duracao_minutos, ativo = true, cor } = req.body;
   if (!nome || preco == null || !duracao_minutos) {
     return res.status(400).json({ erro: 'nome, preco e duracao_minutos são obrigatórios.' });
   }
   const { data, error } = await supabase
     .from('servicos')
-    .insert({ nome, preco, duracao_minutos, ativo })
+    .insert({ nome, preco, duracao_minutos, ativo, ...(cor ? { cor } : {}) })
     .select()
     .single();
   if (error) return res.status(500).json({ erro: error.message });
@@ -31,13 +31,10 @@ router.post('/', async (req, res) => {
 
 // PUT /api/servicos/:id
 router.put('/:id', async (req, res) => {
-  const { nome, preco, duracao_minutos, ativo } = req.body;
-  const { data, error } = await supabase
-    .from('servicos')
-    .update({ nome, preco, duracao_minutos, ativo })
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  const { nome, preco, duracao_minutos, ativo, cor } = req.body;
+  const payload = { nome, preco, duracao_minutos, ativo };
+  if (cor !== undefined) payload.cor = cor;
+  const { data, error } = await supabase.from('servicos').update(payload).eq('id', req.params.id).select().single();
   if (error) return res.status(500).json({ erro: error.message });
   res.json(data);
 });

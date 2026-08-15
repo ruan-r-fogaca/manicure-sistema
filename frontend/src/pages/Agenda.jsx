@@ -125,6 +125,10 @@ export default function Agenda() {
         </Link>
       </div>
 
+      <Link to="/lembretes" className="text-sm font-medium text-plum-600 mb-3 inline-block">
+        🔔 Lembretes de amanhã
+      </Link>
+
       <div className="flex items-center gap-2 mb-2">
         <div className="flex gap-2 flex-1">
           {VISOES.map((v) => (
@@ -168,7 +172,11 @@ export default function Agenda() {
             )}
             <div className="flex flex-col gap-2">
               {itensDoDia.map((item) => (
-                <div key={item.ids.join('-')} className="bg-white rounded-xl2 p-3 border border-base-200">
+                <div
+                  key={item.ids.join('-')}
+                  className="bg-white rounded-xl2 p-3 border border-base-200"
+                  style={item.corServico ? { borderLeftColor: item.corServico, borderLeftWidth: '4px' } : undefined}
+                >
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
                       <p className="font-medium text-sm">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Sucesso, Vazio } from '../components/Estado.jsx';
 import { agruparAgendamentos } from '../utils/agrupar.js';
@@ -357,7 +358,12 @@ export default function Financeiro() {
 
   return (
     <div className="px-5 pt-8 pb-8">
-      <h1 className="font-display font-semibold text-2xl text-plum-600 mb-5">Financeiro</h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="font-display font-semibold text-2xl text-plum-600">Financeiro</h1>
+        <Link to="/relatorios" className="text-sm font-medium text-plum-600">
+          📊 Relatórios
+        </Link>
+      </div>
 
       <Erro mensagem={erro} />
       <Sucesso mensagem={sucesso} />
@@ -446,6 +452,15 @@ export default function Financeiro() {
               {gerando ? 'Gerando...' : 'Gerar cobranças'}
             </button>
           </div>
+
+          <a
+            href={api.urlCompleta(`/exportar/financeiro.csv?competencia=${competencia}`)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-medium text-plum-600 mb-4 inline-block"
+          >
+            ⬇️ Exportar {formatarCompetencia(competencia)} (CSV)
+          </a>
 
           {cobrancas.length > 0 && (
             <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-4 flex justify-between">

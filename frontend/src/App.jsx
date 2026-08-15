@@ -7,6 +7,9 @@ import Clientes from './pages/Clientes.jsx';
 import ClienteDetalhes from './pages/ClienteDetalhes.jsx';
 import ClientesFixas from './pages/ClientesFixas.jsx';
 import Financeiro from './pages/Financeiro.jsx';
+import Relatorios from './pages/Relatorios.jsx';
+import Lembretes from './pages/Lembretes.jsx';
+import Galeria from './pages/Galeria.jsx';
 import Configuracoes from './pages/Configuracoes.jsx';
 
 export default function App() {
@@ -20,6 +23,9 @@ export default function App() {
         <Route path="/clientes/fixas" element={<ClientesFixas />} />
         <Route path="/clientes/:id" element={<ClienteDetalhes />} />
         <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/relatorios" element={<Relatorios />} />
+        <Route path="/lembretes" element={<Lembretes />} />
+        <Route path="/galeria" element={<Galeria />} />
         <Route path="/configuracoes" element={<Configuracoes />} />
       </Routes>
       <BottomNav />

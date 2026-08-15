@@ -5,37 +5,13 @@ import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
+import { formatarDataMensagem, preencherModelo as preencherModeloTexto, linkWhatsapp } from '../utils/mensagem.js';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 function formatarData(dataISO) {
   return new Date(dataISO + 'T12:00:00').toLocaleDateString('pt-BR');
-}
-
-const MESES = [
-  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-];
-
-function dataLocalISO(date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function diaRelativo(dataISO) {
-  const hoje = new Date();
-  const amanha = new Date(hoje);
-  amanha.setDate(hoje.getDate() + 1);
-  if (dataISO === dataLocalISO(hoje)) return 'Hoje';
-  if (dataISO === dataLocalISO(amanha)) return 'Amanhã';
-  return null;
-}
-
-function formatarDataMensagem(dataISO) {
-  const d = new Date(dataISO + 'T12:00:00');
-  const extenso = `${d.getDate()} de ${MESES[d.getMonth()]}`;
-  const relativo = diaRelativo(dataISO);
-  return relativo ? `(${relativo}) ${extenso}` : extenso;
 }
 
 const TIPOS_COBRANCA = [
@@ -135,17 +111,16 @@ export default function ClienteDetalhes() {
 
   function preencherModelo(texto) {
     const proximo = proximoAtendimento();
-    return texto
-      .replaceAll('{nome}', cliente.nome)
-      .replaceAll('{data}', proximo ? formatarDataMensagem(proximo.data) : '')
-      .replaceAll('{hora}', proximo ? proximo.hora_inicio?.slice(0, 5) : '')
-      .replaceAll('{servico}', proximo ? proximo.servicosNome : '');
+    return preencherModeloTexto(texto, {
+      nome: cliente.nome,
+      data: proximo ? formatarDataMensagem(proximo.data) : '',
+      hora: proximo ? proximo.hora_inicio?.slice(0, 5) : '',
+      servico: proximo ? proximo.servicosNome : '',
+    });
   }
 
   function abrirWhatsapp(texto) {
-    const numero = cliente.telefone.replace(/\D/g, '');
-    const numeroComDDI = numero.startsWith('55') ? numero : `55${numero}`;
-    window.open(`https://wa.me/${numeroComDDI}?text=${encodeURIComponent(texto)}`, '_blank', 'noopener');
+    window.open(linkWhatsapp(cliente.telefone, texto), '_blank', 'noopener');
     setMostrarSeletorMensagem(false);
   }
 

@@ -130,7 +130,11 @@ export default function Dashboard() {
           ) : (
             <div className="flex flex-col gap-2">
               {itensHoje.map((item) => (
-                <div key={item.ids.join('-')} className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center">
+                <div
+                  key={item.ids.join('-')}
+                  className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
+                  style={item.corServico ? { borderLeftColor: item.corServico, borderLeftWidth: '4px' } : undefined}
+                >
                   <div>
                     <p className="font-medium text-sm">
                       {item.hora_inicio}–{item.hora_fim}

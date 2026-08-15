@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
 
   const { data: agendamentosHoje, error } = await supabase
     .from('agendamentos')
-    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome)')
+    .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome, cor)')
     .eq('data', hoje)
     .neq('status', 'cancelado')
     .order('hora_inicio');
