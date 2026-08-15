@@ -126,13 +126,13 @@ export default function Relatorios() {
         )}
       </div>
 
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="font-display font-semibold text-lg">Serviços mais vendidos</h2>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <h2 className="font-display font-semibold text-lg min-w-0">Serviços mais vendidos</h2>
         <input
           type="month"
           value={mesServicos}
           onChange={(e) => setMesServicos(e.target.value)}
-          className="border border-base-200 bg-white rounded-lg px-2 py-1.5 text-sm"
+          className="border border-base-200 bg-white rounded-lg px-2 py-1.5 text-sm shrink-0 min-w-[9.5rem]"
         />
       </div>
       <div className="bg-white border border-base-200 rounded-xl2 p-4">

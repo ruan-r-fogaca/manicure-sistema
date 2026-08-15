@@ -251,14 +251,14 @@ function ServicoForm({ servico, onChange, onSalvar, onCancelar }) {
           step="0.01"
           value={servico.preco}
           onChange={(e) => onChange({ ...servico, preco: Number(e.target.value) })}
-          className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1"
+          className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0"
           placeholder="Preço"
         />
         <input
           type="number"
           value={servico.duracao_minutos}
           onChange={(e) => onChange({ ...servico, duracao_minutos: Number(e.target.value) })}
-          className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1"
+          className="border border-base-200 rounded-lg px-2 py-1.5 text-sm flex-1 min-w-0"
           placeholder="Duração (min)"
         />
       </div>
