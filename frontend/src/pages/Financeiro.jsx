@@ -268,6 +268,7 @@ export default function Financeiro() {
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState('');
   const [sucesso, setSucesso] = useState('');
+  const [qtdVencidas, setQtdVencidas] = useState(0);
 
   function carregarResumo() {
     return api
@@ -308,6 +309,10 @@ export default function Financeiro() {
   useEffect(() => {
     setCarregando(true);
     carregarResumo().finally(() => setCarregando(false));
+    api
+      .get('/cobrancas/vencidas')
+      .then((lista) => setQtdVencidas(lista.length))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -358,11 +363,24 @@ export default function Financeiro() {
 
   return (
     <div className="px-5 pt-8 pb-8">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-start justify-between mb-5">
         <h1 className="font-display font-semibold text-2xl text-plum-600">Financeiro</h1>
-        <Link to="/relatorios" className="text-sm font-medium text-plum-600">
-          📊 Relatórios
-        </Link>
+        <div className="flex flex-col items-end gap-2">
+          <Link to="/relatorios" className="text-sm font-medium text-plum-600">
+            📊 Relatórios
+          </Link>
+          <Link
+            to="/financeiro/vencidos"
+            className="relative text-lg leading-none"
+            aria-label={qtdVencidas > 0 ? `${qtdVencidas} mensalidade(s) vencida(s)` : 'Mensalidades vencidas'}
+            title="Mensalidades vencidas"
+          >
+            🔔
+            {qtdVencidas > 0 && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-status-cancelado rounded-full border border-white" />
+            )}
+          </Link>
+        </div>
       </div>
 
       <Erro mensagem={erro} />
@@ -453,14 +471,22 @@ export default function Financeiro() {
             </button>
           </div>
 
-          <a
-            href={api.urlCompleta(`/exportar/financeiro.csv?competencia=${competencia}`)}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm font-medium text-plum-600 mb-4 inline-block"
-          >
-            ⬇️ Exportar {formatarCompetencia(competencia)} (CSV)
-          </a>
+          <div className="flex flex-col gap-1 mb-4">
+            <a
+              href={api.urlCompleta(`/exportar/financeiro.csv?competencia=${competencia}`)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-medium text-plum-600 inline-block"
+            >
+              ⬇️ Exportar {formatarCompetencia(competencia)} (CSV)
+            </a>
+            <Link
+              to={`/financeiro/fechamento-pdf?competencia=${competencia}`}
+              className="text-sm font-medium text-plum-600 inline-block"
+            >
+              🖨️ Fechamento {formatarCompetencia(competencia)} (PDF)
+            </Link>
+          </div>
 
           {cobrancas.length > 0 && (
             <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-4 flex justify-between">

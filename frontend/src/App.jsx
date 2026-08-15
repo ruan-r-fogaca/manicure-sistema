@@ -7,6 +7,8 @@ import Clientes from './pages/Clientes.jsx';
 import ClienteDetalhes from './pages/ClienteDetalhes.jsx';
 import ClientesFixas from './pages/ClientesFixas.jsx';
 import Financeiro from './pages/Financeiro.jsx';
+import MensalidadesVencidas from './pages/MensalidadesVencidas.jsx';
+import FechamentoPDF from './pages/FechamentoPDF.jsx';
 import Relatorios from './pages/Relatorios.jsx';
 import Lembretes from './pages/Lembretes.jsx';
 import Galeria from './pages/Galeria.jsx';
@@ -23,6 +25,8 @@ export default function App() {
         <Route path="/clientes/fixas" element={<ClientesFixas />} />
         <Route path="/clientes/:id" element={<ClienteDetalhes />} />
         <Route path="/financeiro" element={<Financeiro />} />
+        <Route path="/financeiro/vencidos" element={<MensalidadesVencidas />} />
+        <Route path="/financeiro/fechamento-pdf" element={<FechamentoPDF />} />
         <Route path="/relatorios" element={<Relatorios />} />
         <Route path="/lembretes" element={<Lembretes />} />
         <Route path="/galeria" element={<Galeria />} />
