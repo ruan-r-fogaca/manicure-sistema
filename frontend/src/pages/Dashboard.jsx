@@ -76,16 +76,18 @@ export default function Dashboard() {
 
       {resumo && (
         <>
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            <div className="bg-white rounded-xl2 p-3 text-center shadow-sm border border-base-200">
+          <div className="grid grid-cols-[1fr_1.3fr_1fr] gap-3 mb-6">
+            <div className="bg-white rounded-xl2 p-3 flex flex-col items-center justify-center text-center shadow-sm border border-base-200">
               <p className="text-xl font-display font-bold text-plum-600">{resumo.total_atendimentos}</p>
               <p className="text-[11px] text-ink/50 mt-0.5">atendimentos</p>
             </div>
-            <div className="bg-white rounded-xl2 p-3 text-center shadow-sm border border-base-200">
-              <p className="text-xl font-display font-bold text-plum-600">{formatarMoeda(resumo.faturamento_hoje)}</p>
+            <div className="bg-white rounded-xl2 p-3 flex flex-col items-center justify-center text-center shadow-sm border border-base-200">
+              <p className="text-base font-display font-bold text-plum-600 whitespace-nowrap">
+                {formatarMoeda(resumo.faturamento_hoje)}
+              </p>
               <p className="text-[11px] text-ink/50 mt-0.5">faturado hoje</p>
             </div>
-            <div className="bg-white rounded-xl2 p-3 text-center shadow-sm border border-base-200">
+            <div className="bg-white rounded-xl2 p-3 flex flex-col items-center justify-center text-center shadow-sm border border-base-200">
               <p className="text-xl font-display font-bold text-plum-600">{resumo.atendidos}</p>
               <p className="text-[11px] text-ink/50 mt-0.5">concluídos</p>
             </div>
