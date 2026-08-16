@@ -21,15 +21,37 @@ function inicioFimMes(dataRef) {
   return { inicio: inicio.toISOString().slice(0, 10), fim: fim.toISOString().slice(0, 10) };
 }
 
-async function calcularFaturamento(inicio, fim) {
+async function buscarTaxasCartao() {
+  const { data } = await supabase
+    .from('configuracoes')
+    .select('taxa_credito_percentual, taxa_debito_percentual')
+    .eq('id', 1)
+    .maybeSingle();
+  return {
+    credito: Number(data?.taxa_credito_percentual ?? 0),
+    debito: Number(data?.taxa_debito_percentual ?? 0),
+  };
+}
+
+// Desconta a taxa da maquininha do valor bruto pra refletir o que efetivamente
+// cai na conta — dinheiro/pix não têm taxa, então passam direto.
+function valorLiquido(valor, formaPagamento, taxas) {
+  const taxa = formaPagamento === 'credito' ? taxas.credito : formaPagamento === 'debito' ? taxas.debito : 0;
+  return Number(valor) * (1 - taxa / 100);
+}
+
+async function calcularFaturamento(inicio, fim, taxas) {
   // -03:00 explícito: data_pagamento é timestamptz (instante real), então sem o
   // fuso a comparação assume UTC e desloca o dia perto da meia-noite no Brasil.
   const [{ data: atendidos, error: erroAtendidos }, { data: pagos, error: erroPagos }] = await Promise.all([
-    supabase.from('agendamentos').select('valor').eq('status', 'atendido').gte('data', inicio).lte('data', fim),
+    supabase.from('agendamentos').select('valor').in('status', ['atendido', 'pendente']).gte('data', inicio).lte('data', fim),
     supabase
       .from('pagamentos')
-      .select('valor, forma_pagamento, data_pagamento')
+      // Só avulso: visita de cliente mensal não é "recebido" separado, já
+      // está coberta pela mensalidade (mesma regra de origemPorTipo abaixo).
+      .select('valor, forma_pagamento, data_pagamento, agendamentos!inner(clientes!inner(tipo_cobranca))')
       .eq('status', 'pago')
+      .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento')
       .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
       .lte('data_pagamento', `${fim}T23:59:59-03:00`),
   ]);
@@ -37,18 +59,26 @@ async function calcularFaturamento(inicio, fim) {
   if (erroPagos) throw erroPagos;
 
   const porFormaPagamento = { pix: 0, dinheiro: 0, credito: 0, debito: 0 };
+  let recebidoLiquido = 0;
+  let taxaCartaoDescontada = 0;
   for (const p of pagos) {
-    if (p.forma_pagamento) porFormaPagamento[p.forma_pagamento] += Number(p.valor);
+    const liquido = valorLiquido(p.valor, p.forma_pagamento, taxas);
+    recebidoLiquido += liquido;
+    taxaCartaoDescontada += Number(p.valor) - liquido;
+    if (p.forma_pagamento && porFormaPagamento[p.forma_pagamento] !== undefined) {
+      porFormaPagamento[p.forma_pagamento] += liquido;
+    }
   }
 
   return {
     atendimentos_realizados: atendidos.reduce((s, a) => s + Number(a.valor), 0),
-    pagamentos_recebidos: pagos.reduce((s, p) => s + Number(p.valor), 0),
+    pagamentos_recebidos: recebidoLiquido,
     por_forma_pagamento: porFormaPagamento,
+    taxa_cartao_descontada: taxaCartaoDescontada,
   };
 }
 
-async function origemPorTipo(inicio, fim, competencia) {
+async function origemPorTipo(inicio, fim, competencia, taxas) {
   // Filtra pelo tipo de cobrança do cliente pra não misturar pagamentos de
   // atendimento avulso com visitas de clientes mensais (que já pagaram no fechamento).
   const [
@@ -56,17 +86,17 @@ async function origemPorTipo(inicio, fim, competencia) {
     { data: avulsoAtendido, error: erroAvulso },
     { data: avulsoPago, error: erroAvulsoPago },
   ] = await Promise.all([
-    supabase.from('cobrancas').select('valor_cobrado, tipo, status').eq('competencia', competencia),
+    supabase.from('cobrancas').select('valor_cobrado, tipo, status, forma_pagamento').eq('competencia', competencia),
     supabase
       .from('agendamentos')
       .select('valor, clientes!inner(tipo_cobranca)')
-      .eq('status', 'atendido')
+      .in('status', ['atendido', 'pendente'])
       .eq('clientes.tipo_cobranca', 'por_atendimento')
       .gte('data', inicio)
       .lte('data', fim),
     supabase
       .from('pagamentos')
-      .select('valor, agendamentos!inner(clientes!inner(tipo_cobranca))')
+      .select('valor, forma_pagamento, agendamentos!inner(clientes!inner(tipo_cobranca))')
       .eq('status', 'pago')
       .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento')
       .gte('data_pagamento', `${inicio}T00:00:00-03:00`)
@@ -76,25 +106,27 @@ async function origemPorTipo(inicio, fim, competencia) {
   if (erroAvulso) throw erroAvulso;
   if (erroAvulsoPago) throw erroAvulsoPago;
 
-  const somaTipo = (tipo, filtroStatus) =>
+  // aplicarTaxa só faz sentido em "pago" (dinheiro já recebido) — o valor
+  // "cobrado" é o que foi faturado, independente de como acabou sendo pago.
+  const somaTipo = (tipo, filtroStatus, aplicarTaxa = false) =>
     cobrancasMes
       .filter((c) => c.tipo === tipo && (!filtroStatus || filtroStatus.includes(c.status)))
-      .reduce((s, c) => s + Number(c.valor_cobrado), 0);
+      .reduce((s, c) => s + (aplicarTaxa ? valorLiquido(c.valor_cobrado, c.forma_pagamento, taxas) : Number(c.valor_cobrado)), 0);
 
   const mensalFixo = {
     cobrado: somaTipo('mensal_fixo'),
-    pago: somaTipo('mensal_fixo', ['pago']),
+    pago: somaTipo('mensal_fixo', ['pago'], true),
     pendente: somaTipo('mensal_fixo', ['pendente', 'atrasado']),
   };
   const mensalPorServico = {
     cobrado: somaTipo('mensal_por_servico'),
-    pago: somaTipo('mensal_por_servico', ['pago']),
+    pago: somaTipo('mensal_por_servico', ['pago'], true),
     pendente: somaTipo('mensal_por_servico', ['pendente', 'atrasado']),
   };
 
   const avulso = {
     cobrado: avulsoAtendido.reduce((s, a) => s + Number(a.valor), 0),
-    pago: avulsoPago.reduce((s, p) => s + Number(p.valor), 0),
+    pago: avulsoPago.reduce((s, p) => s + valorLiquido(p.valor, p.forma_pagamento, taxas), 0),
   };
 
   return {
@@ -112,12 +144,13 @@ router.get('/', async (req, res) => {
     const { inicio: inicioSemana, fim: fimSemana } = inicioFimSemana(dataRef);
     const { inicio: inicioMes, fim: fimMes } = inicioFimMes(dataRef);
     const competencia = `${inicioMes.slice(0, 7)}-01`;
+    const taxas = await buscarTaxasCartao();
 
     const [dia, semana, mes, origem_mes] = await Promise.all([
-      calcularFaturamento(dataRef, dataRef),
-      calcularFaturamento(inicioSemana, fimSemana),
-      calcularFaturamento(inicioMes, fimMes),
-      origemPorTipo(inicioMes, fimMes, competencia),
+      calcularFaturamento(dataRef, dataRef, taxas),
+      calcularFaturamento(inicioSemana, fimSemana, taxas),
+      calcularFaturamento(inicioMes, fimMes, taxas),
+      origemPorTipo(inicioMes, fimMes, competencia, taxas),
     ]);
 
     // "Pendente" = atendimento avulso já realizado mas ainda não pago. Um pagamento
@@ -132,7 +165,7 @@ router.get('/', async (req, res) => {
         .from('pagamentos')
         .select('valor, agendamentos!inner(status, clientes!inner(tipo_cobranca))')
         .eq('status', 'pendente')
-        .eq('agendamentos.status', 'atendido')
+        .in('agendamentos.status', ['atendido', 'pendente'])
         .eq('agendamentos.clientes.tipo_cobranca', 'por_atendimento'),
       supabase.from('cobrancas').select('valor_cobrado').in('status', ['pendente', 'atrasado']),
     ]);
@@ -143,7 +176,15 @@ router.get('/', async (req, res) => {
       pendentesAvulso.reduce((s, p) => s + Number(p.valor), 0) +
       pendentesMensais.reduce((s, c) => s + Number(c.valor_cobrado), 0);
 
-    res.json({ hoje: dia, semana, mes, pendente: totalPendente, competencia: competencia.slice(0, 7), origem_mes });
+    res.json({
+      hoje: dia,
+      semana,
+      mes,
+      pendente: totalPendente,
+      competencia: competencia.slice(0, 7),
+      origem_mes,
+      taxas_cartao: taxas,
+    });
   } catch (error) {
     res.status(500).json({ erro: error.message });
   }
@@ -159,7 +200,7 @@ router.get('/atendimentos', async (req, res) => {
   const { data, error } = await supabase
     .from('agendamentos')
     .select('*, clientes(nome, telefone, tipo_cobranca), servicos(nome), pagamentos(id, status, forma_pagamento)')
-    .eq('status', 'atendido')
+    .in('status', ['atendido', 'pendente'])
     .gte('data', inicio)
     .lte('data', fim)
     .order('data')
@@ -204,7 +245,7 @@ router.post('/fechamento', async (req, res) => {
             .from('agendamentos')
             .select('id')
             .eq('cliente_id', cliente.id)
-            .eq('status', 'atendido')
+            .in('status', ['atendido', 'pendente'])
             .gte('data', inicio)
             .lte('data', fim);
           if (erroAt) throw erroAt;

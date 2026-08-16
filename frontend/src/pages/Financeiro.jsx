@@ -58,7 +58,7 @@ function ResumoCard({ dados }) {
         <span className="font-display font-semibold text-plum-600">{formatarMoeda(dados.atendimentos_realizados)}</span>
       </div>
       <div className="flex justify-between">
-        <span className="text-sm text-ink/60">Recebido</span>
+        <span className="text-sm text-ink/60">Recebido (líquido)</span>
         <span className="font-display font-semibold text-status-atendido">{formatarMoeda(dados.pagamentos_recebidos)}</span>
       </div>
     </div>
@@ -69,7 +69,8 @@ function PorFormaPagamento({ dados }) {
   if (!dados) return null;
   return (
     <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-3">
-      <p className="text-xs uppercase tracking-wide text-ink/40 mb-2">Por forma de pagamento</p>
+      <p className="text-xs uppercase tracking-wide text-ink/40 mb-0.5">Por forma de pagamento</p>
+      <p className="text-[11px] text-ink/40 mb-2">Crédito e débito já com a taxa da maquininha descontada.</p>
       {FORMAS.map((f) => (
         <div key={f.valor} className="flex justify-between text-sm mb-1 last:mb-0">
           <span>
@@ -115,6 +116,7 @@ function LinhaAtendimento({ item, onMarcarPago }) {
           <p className="text-xs text-ink/50">
             {item.servicosNome} · {formatarMoeda(item.valor)}
           </p>
+          {item.observacao && <p className="text-xs text-ink/40 mt-0.5 italic">obs: {item.observacao}</p>}
         </div>
         {item.pagamentoStatus === 'incluso' && (
           <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-ink/10 text-ink/50 shrink-0">

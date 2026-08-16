@@ -8,7 +8,7 @@ import { api } from '../api/client.js';
 // - Se a cliente for mensal (já pagou no fechamento do mês), marca atendido
 //   na hora, sem pedir forma de pagamento — senão o valor entraria duas vezes
 //   nos relatórios (uma na mensalidade, outra como "recebido" avulso).
-// - Qualquer outro status (agendado/confirmado/cancelado/faltou) aplica na hora.
+// - Qualquer outro status (agendado/confirmado/cancelado/pendente) aplica na hora.
 // - Depois de escolher a forma de pagamento (avulso): marca o(s) agendamento(s)
 //   como atendido, marca o(s) pagamento(s) como pago com a forma escolhida,
 //   mostra "Atendimento encerrado" e volta pra tela inicial.

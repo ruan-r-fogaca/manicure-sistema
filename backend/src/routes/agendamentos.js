@@ -10,7 +10,7 @@ async function existeConflito(data, horaInicio, horaFim, ignorarId = null) {
     .from('agendamentos')
     .select('id, hora_inicio, hora_fim')
     .eq('data', data)
-    .in('status', ['agendado', 'confirmado', 'atendido']);
+    .in('status', ['agendado', 'confirmado', 'atendido', 'pendente']);
 
   if (ignorarId) query = query.neq('id', ignorarId);
 
@@ -118,10 +118,13 @@ router.put('/:id/remarcar', async (req, res) => {
   res.json(atualizado);
 });
 
-// PUT /api/agendamentos/:id/status -> muda status (confirmado, atendido, cancelado, faltou)
+// PUT /api/agendamentos/:id/status -> muda status (confirmado, atendido, cancelado, pendente)
+// "pendente" = atendeu, mas o pagamento avulso ficou pra depois (ex: paga semana que vem).
+// Conta como atendimento realizado em todo lugar que soma faturamento/relatórios — só
+// o pagamento em si é que continua pendente até ela marcar como pago no Financeiro.
 router.put('/:id/status', async (req, res) => {
   const { status } = req.body;
-  const validos = ['agendado', 'confirmado', 'atendido', 'cancelado', 'faltou'];
+  const validos = ['agendado', 'confirmado', 'atendido', 'cancelado', 'pendente'];
   if (!validos.includes(status)) return res.status(400).json({ erro: 'status inválido.' });
 
   const { data, error } = await supabase
@@ -132,8 +135,8 @@ router.put('/:id/status', async (req, res) => {
     .single();
 
   if (error) return res.status(500).json({ erro: error.message });
-  // Cancelar ou marcar falta libera o horário automaticamente pois a checagem de
-  // conflito só considera agendado/confirmado/atendido.
+  // Só cancelar libera o horário automaticamente — a checagem de conflito considera
+  // agendado/confirmado/atendido/pendente como "ocupado" (pendente já foi atendido).
   res.json(data);
 });
 

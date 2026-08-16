@@ -3,10 +3,10 @@ const CONFIG = {
   confirmado: { cor: '#4F86A6', texto: 'Confirmado' },
   atendido: { cor: '#5B9279', texto: 'Atendido' },
   cancelado: { cor: '#A65C5C', texto: 'Cancelado' },
-  faltou: { cor: '#8A7F9C', texto: 'Faltou' },
+  pendente: { cor: '#D98E4A', texto: 'Pendente' },
 };
 
-const OPCOES = ['agendado', 'confirmado', 'atendido', 'cancelado', 'faltou'];
+const OPCOES = ['agendado', 'confirmado', 'atendido', 'cancelado', 'pendente'];
 
 // Igual ao StatusBadge visualmente, mas é um <select> de verdade por baixo:
 // tocar no "ícone"/badge já abre as opções e troca o status na hora, sem

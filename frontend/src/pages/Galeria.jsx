@@ -14,6 +14,8 @@ export default function Galeria() {
   const [legenda, setLegenda] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+  const [busca, setBusca] = useState('');
+  const [baixando, setBaixando] = useState(false);
   const inputRef = useRef(null);
 
   function carregar() {
@@ -74,7 +76,32 @@ export default function Galeria() {
     }
   }
 
+  async function baixarFoto(foto) {
+    setBaixando(true);
+    setErro('');
+    try {
+      const resposta = await fetch(foto.url);
+      const blob = await resposta.blob();
+      const extensao = (foto.url.split('.').pop() || 'jpg').split('?')[0];
+      const nomeBase = (foto.clientes?.nome || 'foto').replace(/\s+/g, '_');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${nomeBase}.${extensao}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setErro('Não foi possível baixar a foto.');
+    } finally {
+      setBaixando(false);
+    }
+  }
+
   if (carregando) return <Carregando />;
+
+  const fotosFiltradas = fotos.filter((f) => (f.clientes?.nome || '').toLowerCase().includes(busca.trim().toLowerCase()));
 
   return (
     <div className="px-5 pt-8 pb-8">
@@ -131,17 +158,29 @@ export default function Galeria() {
       {fotos.length === 0 && !arquivoEscolhido ? (
         <Vazio titulo="Nenhuma foto ainda" descricao="Toque no + pra adicionar a primeira foto do seu portfólio." />
       ) : (
-        <div className="grid grid-cols-3 gap-1.5">
-          {fotos.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFotoAmpliada(f)}
-              className="aspect-square rounded-lg overflow-hidden bg-base-100"
-            >
-              <img src={f.url} alt={f.legenda || 'Foto do portfólio'} className="w-full h-full object-cover" />
-            </button>
-          ))}
-        </div>
+        <>
+          <input
+            placeholder="Buscar por cliente..."
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
+          />
+          {fotosFiltradas.length === 0 ? (
+            <p className="text-sm text-ink/40 text-center py-8">Nenhuma foto encontrada pra essa busca.</p>
+          ) : (
+            <div className="grid grid-cols-3 gap-1.5">
+              {fotosFiltradas.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFotoAmpliada(f)}
+                  className="aspect-square rounded-lg overflow-hidden bg-base-100"
+                >
+                  <img src={f.url} alt={f.legenda || 'Foto do portfólio'} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {fotoAmpliada && (
@@ -155,6 +194,13 @@ export default function Galeria() {
               {fotoAmpliada.clientes?.nome && <p className="text-sm font-medium">{fotoAmpliada.clientes.nome}</p>}
               {fotoAmpliada.legenda && <p className="text-sm text-ink/60 mt-0.5">{fotoAmpliada.legenda}</p>}
               <div className="flex gap-2 mt-3">
+                <button
+                  onClick={() => baixarFoto(fotoAmpliada)}
+                  disabled={baixando}
+                  className="flex-1 bg-plum-600/10 text-plum-600 rounded-lg py-2 text-sm font-medium disabled:opacity-60"
+                >
+                  {baixando ? 'Baixando...' : '⬇️ Baixar'}
+                </button>
                 <button
                   onClick={() => excluirFoto(fotoAmpliada.id)}
                   className="flex-1 bg-status-cancelado/10 text-status-cancelado rounded-lg py-2 text-sm font-medium"

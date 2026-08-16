@@ -186,6 +186,7 @@ export default function Agenda() {
                       <p className="text-xs text-ink/50">
                         {item.servicosNome} · {formatarMoeda(item.valor)}
                       </p>
+                      {item.observacao && <p className="text-xs text-ink/40 mt-0.5 italic">obs: {item.observacao}</p>}
                     </div>
                     <StatusSelect status={item.status} onChange={(novoStatus) => mudarStatus(item, novoStatus)} />
                   </div>

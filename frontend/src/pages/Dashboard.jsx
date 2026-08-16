@@ -143,6 +143,7 @@ export default function Dashboard() {
                       {item.terminaDiaSeguinte && ' (dia seguinte)'} · {item.clientes?.nome}
                     </p>
                     <p className="text-xs text-ink/50">{item.servicosNome}</p>
+                    {item.observacao && <p className="text-xs text-ink/40 mt-0.5 italic">obs: {item.observacao}</p>}
                   </div>
                   {/* Tocar no badge de status já deixa trocar pra qualquer outro,
                       sem precisar ir na tela de clientes. */}

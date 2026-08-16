@@ -15,7 +15,7 @@ router.get('/faturamento', async (req, res) => {
     const { data: atendidos, error } = await supabase
       .from('agendamentos')
       .select('data, valor')
-      .eq('status', 'atendido')
+      .in('status', ['atendido', 'pendente'])
       .gte('data', inicioISO);
     if (error) return res.status(500).json({ erro: error.message });
 
@@ -47,7 +47,7 @@ router.get('/servicos', async (req, res) => {
     const { data, error } = await supabase
       .from('agendamentos')
       .select('valor, servicos(nome, cor)')
-      .eq('status', 'atendido')
+      .in('status', ['atendido', 'pendente'])
       .gte('data', inicio)
       .lte('data', fim);
     if (error) return res.status(500).json({ erro: error.message });

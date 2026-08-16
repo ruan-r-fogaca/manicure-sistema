@@ -26,7 +26,7 @@ export default {
           confirmado: '#4F86A6',
           atendido: '#5B9279',
           cancelado: '#A65C5C',
-          faltou: '#8A7F9C',
+          pendente: '#D98E4A',
         },
       },
       fontFamily: {

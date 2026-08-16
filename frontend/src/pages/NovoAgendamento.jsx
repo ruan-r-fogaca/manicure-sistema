@@ -44,12 +44,16 @@ export default function NovoAgendamento() {
     cancelarPagamento,
   } = usePagamentoFlow({ aoAtualizar: () => {} });
 
-  // Adicionar cliente rápido (botão "+" ao lado do select de cliente)
+  // Adicionar cliente rápido (botão "+" ao lado do seletor de cliente)
   const [mostrarNovoCliente, setMostrarNovoCliente] = useState(false);
   const [novoClienteNome, setNovoClienteNome] = useState('');
   const [novoClienteTelefone, setNovoClienteTelefone] = useState('');
   const [salvandoCliente, setSalvandoCliente] = useState(false);
   const [erroCliente, setErroCliente] = useState('');
+
+  // Seletor de cliente com busca (abre em modal ao tocar no campo)
+  const [mostrarSeletorCliente, setMostrarSeletorCliente] = useState(false);
+  const [buscaCliente, setBuscaCliente] = useState('');
 
   function carregarClientes() {
     return api.get('/clientes').then(setClientes).catch((e) => setErro(e.message));
@@ -159,6 +163,10 @@ export default function NovoAgendamento() {
   }
 
   const termino = calcularTermino();
+  const clienteSelecionado = clientes.find((c) => c.id === clienteId);
+  const clientesFiltrados = clientes.filter((c) =>
+    c.nome.toLowerCase().includes(buscaCliente.trim().toLowerCase())
+  );
 
   return (
     <div className="px-5 pt-8">
@@ -171,18 +179,16 @@ export default function NovoAgendamento() {
         <div>
           <label className="text-sm font-medium text-ink/70 mb-1 block">Cliente</label>
           <div className="flex gap-2">
-            <select
-              value={clienteId}
-              onChange={(e) => setClienteId(e.target.value)}
-              className="flex-1 bg-white border border-base-200 rounded-lg px-3 py-2.5"
+            <button
+              type="button"
+              onClick={() => {
+                setBuscaCliente('');
+                setMostrarSeletorCliente(true);
+              }}
+              className="flex-1 bg-white border border-base-200 rounded-lg px-3 py-2.5 text-left"
             >
-              <option value="">Selecione...</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.nome}
-                </option>
-              ))}
-            </select>
+              {clienteSelecionado ? clienteSelecionado.nome : <span className="text-ink/40">Selecione...</span>}
+            </button>
             <button
               type="button"
               onClick={() => setMostrarNovoCliente((v) => !v)}
@@ -325,6 +331,58 @@ export default function NovoAgendamento() {
               >
                 Não
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mostrarSeletorCliente && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4"
+          onClick={() => setMostrarSeletorCliente(false)}
+        >
+          <div
+            className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-4 max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="font-display font-semibold text-lg">Selecionar cliente</h2>
+              <button
+                type="button"
+                onClick={() => setMostrarSeletorCliente(false)}
+                className="text-ink/40 text-xl leading-none px-2"
+                aria-label="Fechar"
+              >
+                ×
+              </button>
+            </div>
+            <input
+              autoFocus
+              placeholder="Buscar por nome..."
+              value={buscaCliente}
+              onChange={(e) => setBuscaCliente(e.target.value)}
+              className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
+            />
+            <div className="overflow-y-auto flex-1 flex flex-col gap-1">
+              {clientesFiltrados.length === 0 ? (
+                <p className="text-sm text-ink/40 text-center py-6">Nenhuma cliente encontrada.</p>
+              ) : (
+                clientesFiltrados.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      setClienteId(c.id);
+                      setMostrarSeletorCliente(false);
+                    }}
+                    className={`text-left px-3 py-2.5 rounded-lg text-sm ${
+                      c.id === clienteId ? 'bg-plum-600/10 text-plum-600 font-medium' : 'hover:bg-base-100'
+                    }`}
+                  >
+                    {c.nome}
+                  </button>
+                ))
+              )}
             </div>
           </div>
         </div>

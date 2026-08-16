@@ -67,7 +67,7 @@ router.get('/vencidas', async (req, res) => {
             .from('agendamentos')
             .select('id')
             .eq('cliente_id', cliente.id)
-            .eq('status', 'atendido')
+            .in('status', ['atendido', 'pendente'])
             .gte('data', competencia)
             .lte('data', fim);
           valor = (atendimentos?.length || 0) * Number(cliente.valor_por_servico || 0);

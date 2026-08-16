@@ -34,26 +34,15 @@ export default function FechamentoPDF() {
   const competencia = searchParams.get('competencia') || mesAtual();
   const [resumo, setResumo] = useState(null);
   const [cobrancas, setCobrancas] = useState([]);
-  const [atendimentos, setAtendimentos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
   useEffect(() => {
-    const [ano, mes] = competencia.split('-').map(Number);
-    const ultimoDia = new Date(ano, mes, 0).getDate();
-    const inicio = `${competencia}-01`;
-    const fim = `${competencia}-${String(ultimoDia).padStart(2, '0')}`;
-
     // dia 15 garante cair dentro do mês escolhido independente de quantos dias ele tem
-    Promise.all([
-      api.get(`/financeiro?data=${competencia}-15`),
-      api.get(`/cobrancas?competencia=${competencia}`),
-      api.get(`/financeiro/atendimentos?inicio=${inicio}&fim=${fim}`),
-    ])
-      .then(([r, c, a]) => {
+    Promise.all([api.get(`/financeiro?data=${competencia}-15`), api.get(`/cobrancas?competencia=${competencia}`)])
+      .then(([r, c]) => {
         setResumo(r);
         setCobrancas(c);
-        setAtendimentos(a);
       })
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
@@ -65,23 +54,9 @@ export default function FechamentoPDF() {
     0,
     (resumo?.origem_mes?.total_cobrado || 0) - (resumo?.origem_mes?.total_pago || 0)
   );
-
-  // Recebido por forma de pagamento, só do que efetivamente compõe a receita do mês:
-  // atendimentos avulsos pagos + mensalidades pagas (evita contar visita de mensalista
-  // junto com atendimento avulso, que infla o total sem representar dinheiro extra).
-  const recebidoPorForma = { dinheiro: 0, pix: 0, credito: 0, debito: 0 };
-  for (const a of atendimentos) {
-    if (a.clientes?.tipo_cobranca !== 'por_atendimento') continue;
-    const pagamentoPago = a.pagamentos?.find((p) => p.status === 'pago');
-    if (pagamentoPago?.forma_pagamento && recebidoPorForma[pagamentoPago.forma_pagamento] !== undefined) {
-      recebidoPorForma[pagamentoPago.forma_pagamento] += Number(a.valor);
-    }
-  }
-  for (const c of cobrancas) {
-    if (c.status === 'pago' && c.forma_pagamento && recebidoPorForma[c.forma_pagamento] !== undefined) {
-      recebidoPorForma[c.forma_pagamento] += Number(c.valor_cobrado);
-    }
-  }
+  const taxas = resumo?.taxas_cartao || { credito: 0, debito: 0 };
+  const recebidoPorForma = resumo?.mes?.por_forma_pagamento || { dinheiro: 0, pix: 0, credito: 0, debito: 0 };
+  const taxaCartaoDescontada = resumo?.mes?.taxa_cartao_descontada || 0;
 
   return (
     <div className="px-5 pt-8 pb-12 max-w-xl mx-auto">
@@ -151,6 +126,12 @@ export default function FechamentoPDF() {
             <span className="font-medium">{formatarMoeda(recebidoPorForma[f.valor])}</span>
           </div>
         ))}
+        {taxaCartaoDescontada > 0 && (
+          <p className="text-xs text-ink/40 pt-2 mt-1 border-t border-base-200">
+            Já descontada taxa de cartão: {formatarMoeda(taxaCartaoDescontada)} (crédito {taxas.credito}% · débito{' '}
+            {taxas.debito}%)
+          </p>
+        )}
       </div>
 
       <p className="text-xs uppercase tracking-wide text-ink/40 mb-2 mt-5">

@@ -33,6 +33,13 @@ router.put('/:id', async (req, res) => {
     .select()
     .single();
   if (error) return res.status(500).json({ erro: error.message });
+
+  // Cliente marcada como "Pendente" (atendeu, ia pagar depois): assim que o
+  // pagamento é confirmado, o agendamento vira "Atendido" automaticamente.
+  if (status === 'pago' && data.agendamento_id) {
+    await supabase.from('agendamentos').update({ status: 'atendido' }).eq('id', data.agendamento_id).eq('status', 'pendente');
+  }
+
   res.json(data);
 });
 

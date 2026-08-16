@@ -54,7 +54,7 @@ router.get('/:id', async (req, res) => {
       .from('agendamentos')
       .select('*, servicos(nome)')
       .eq('cliente_id', req.params.id)
-      .eq('status', 'atendido')
+      .in('status', ['atendido', 'pendente'])
       .order('data', { ascending: false })
       .limit(1)
       .maybeSingle(),
@@ -92,7 +92,7 @@ router.get('/fixas/proximas', async (req, res) => {
         .from('agendamentos')
         .select('data')
         .eq('cliente_id', cliente.id)
-        .eq('status', 'atendido')
+        .in('status', ['atendido', 'pendente'])
         .order('data', { ascending: false })
         .limit(1)
         .maybeSingle();

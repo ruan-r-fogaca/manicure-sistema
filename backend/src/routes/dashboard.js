@@ -17,7 +17,7 @@ router.get('/', async (req, res) => {
 
   if (error) return res.status(500).json({ erro: error.message });
 
-  const atendidos = agendamentosHoje.filter((a) => a.status === 'atendido');
+  const atendidos = agendamentosHoje.filter((a) => a.status === 'atendido' || a.status === 'pendente');
   const faturamentoHoje = atendidos.reduce((soma, a) => soma + Number(a.valor), 0);
 
   const proximo = agendamentosHoje.find((a) => ['agendado', 'confirmado'].includes(a.status));

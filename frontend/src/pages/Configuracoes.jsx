@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
-import { Carregando, Erro } from '../components/Estado.jsx';
+import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -16,18 +16,42 @@ export default function Configuracoes() {
   const [criandoServico, setCriandoServico] = useState(null);
   const [editandoMensagem, setEditandoMensagem] = useState(null);
   const [criandoMensagem, setCriandoMensagem] = useState(null);
+  const [taxaCredito, setTaxaCredito] = useState('');
+  const [taxaDebito, setTaxaDebito] = useState('');
+  const [salvandoTaxas, setSalvandoTaxas] = useState(false);
+  const [sucesso, setSucesso] = useState('');
 
   function carregar() {
-    Promise.all([api.get('/servicos'), api.get('/mensagens')])
-      .then(([s, m]) => {
+    Promise.all([api.get('/servicos'), api.get('/mensagens'), api.get('/configuracoes')])
+      .then(([s, m, config]) => {
         setServicos(s);
         setMensagens(m);
+        setTaxaCredito(String(config.taxa_credito_percentual));
+        setTaxaDebito(String(config.taxa_debito_percentual));
       })
       .catch((e) => setErro(e.message))
       .finally(() => setCarregando(false));
   }
 
   useEffect(carregar, []);
+
+  async function salvarTaxas(e) {
+    e.preventDefault();
+    setSalvandoTaxas(true);
+    setErro('');
+    try {
+      await api.put('/configuracoes', {
+        taxa_credito_percentual: Number(taxaCredito),
+        taxa_debito_percentual: Number(taxaDebito),
+      });
+      setSucesso('Taxas salvas ✓');
+      setTimeout(() => setSucesso(''), 2000);
+    } catch (err) {
+      setErro(err.message);
+    } finally {
+      setSalvandoTaxas(false);
+    }
+  }
 
   async function salvarServico(servico) {
     try {
@@ -90,6 +114,7 @@ export default function Configuracoes() {
       </div>
 
       <Erro mensagem={erro} />
+      <Sucesso mensagem={sucesso} />
 
       <a
         href={api.urlCompleta('/exportar/clientes.csv')}
@@ -99,6 +124,53 @@ export default function Configuracoes() {
       >
         ⬇️ Exportar clientes (CSV)
       </a>
+
+      <h2 className="font-display font-semibold text-lg mb-1">Taxas de cartão</h2>
+      <p className="text-xs text-ink/40 mb-3">
+        Descontadas automaticamente do valor recebido em crédito/débito no Financeiro, já que a maquininha fica com
+        uma parte.
+      </p>
+      <form onSubmit={salvarTaxas} className="bg-white border border-base-200 rounded-xl2 p-3 flex flex-col gap-2 mb-8">
+        <div className="flex gap-2">
+          <label className="flex-1 flex flex-col gap-1 text-xs text-ink/60">
+            Crédito
+            <div className="relative">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={taxaCredito}
+                onChange={(e) => setTaxaCredito(e.target.value)}
+                className="w-full border border-base-200 rounded-lg pl-2 pr-6 py-1.5 text-sm"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-ink/40">%</span>
+            </div>
+          </label>
+          <label className="flex-1 flex flex-col gap-1 text-xs text-ink/60">
+            Débito
+            <div className="relative">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={taxaDebito}
+                onChange={(e) => setTaxaDebito(e.target.value)}
+                className="w-full border border-base-200 rounded-lg pl-2 pr-6 py-1.5 text-sm"
+              />
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-ink/40">%</span>
+            </div>
+          </label>
+        </div>
+        <button
+          type="submit"
+          disabled={salvandoTaxas}
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2 text-sm font-medium disabled:opacity-60"
+        >
+          {salvandoTaxas ? 'Salvando...' : 'Salvar taxas'}
+        </button>
+      </form>
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-display font-semibold text-lg">Serviços</h2>

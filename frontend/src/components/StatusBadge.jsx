@@ -3,7 +3,7 @@ const CONFIG = {
   confirmado: { cor: '#4F86A6', texto: 'Confirmado' },
   atendido: { cor: '#5B9279', texto: 'Atendido' },
   cancelado: { cor: '#A65C5C', texto: 'Cancelado' },
-  faltou: { cor: '#8A7F9C', texto: 'Faltou' },
+  pendente: { cor: '#D98E4A', texto: 'Pendente' },
 };
 
 export default function StatusBadge({ status }) {

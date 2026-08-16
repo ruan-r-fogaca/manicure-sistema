@@ -67,7 +67,7 @@ router.get('/financeiro.csv', async (req, res) => {
     supabase
       .from('agendamentos')
       .select('data, valor, clientes!inner(nome, tipo_cobranca), servicos(nome), pagamentos(status, forma_pagamento)')
-      .eq('status', 'atendido')
+      .in('status', ['atendido', 'pendente'])
       .eq('clientes.tipo_cobranca', 'por_atendimento')
       .gte('data', inicio)
       .lte('data', fim),
