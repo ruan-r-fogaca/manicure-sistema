@@ -64,6 +64,16 @@ export default function NovoAgendamento() {
     api.get('/servicos?ativo=true').then(setServicos).catch((e) => setErro(e.message));
   }, []);
 
+  // Trava o scroll da página por trás do modal enquanto ele está aberto.
+  useEffect(() => {
+    if (!mostrarSeletorCliente) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [mostrarSeletorCliente]);
+
   const servicosSelecionados = servicos.filter((s) => servicoIds.includes(s.id));
   const duracaoTotal = servicosSelecionados.reduce((soma, s) => soma + s.duracao_minutos, 0);
   const valorTotal = servicosSelecionados.reduce((soma, s) => soma + Number(s.preco), 0);
@@ -342,10 +352,10 @@ export default function NovoAgendamento() {
           onClick={() => setMostrarSeletorCliente(false)}
         >
           <div
-            className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-4 max-h-[80vh] flex flex-col"
+            className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-4 h-[75dvh] sm:h-auto sm:max-h-[80vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-3 shrink-0">
               <h2 className="font-display font-semibold text-lg">Selecionar cliente</h2>
               <button
                 type="button"
@@ -361,9 +371,9 @@ export default function NovoAgendamento() {
               placeholder="Buscar por nome..."
               value={buscaCliente}
               onChange={(e) => setBuscaCliente(e.target.value)}
-              className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
+              className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3 shrink-0"
             />
-            <div className="overflow-y-auto flex-1 flex flex-col gap-1">
+            <div className="overflow-y-auto overscroll-contain flex-1 flex flex-col gap-1">
               {clientesFiltrados.length === 0 ? (
                 <p className="text-sm text-ink/40 text-center py-6">Nenhuma cliente encontrada.</p>
               ) : (

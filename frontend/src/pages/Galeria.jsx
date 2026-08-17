@@ -159,12 +159,14 @@ export default function Galeria() {
         <Vazio titulo="Nenhuma foto ainda" descricao="Toque no + pra adicionar a primeira foto do seu portfólio." />
       ) : (
         <>
-          <input
-            placeholder="Buscar por cliente..."
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
-          />
+          <div className="sticky top-0 z-10 bg-base-50 -mx-5 px-5 pt-2 pb-3 -mt-2">
+            <input
+              placeholder="Buscar por cliente..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5"
+            />
+          </div>
           {fotosFiltradas.length === 0 ? (
             <p className="text-sm text-ink/40 text-center py-8">Nenhuma foto encontrada pra essa busca.</p>
           ) : (
