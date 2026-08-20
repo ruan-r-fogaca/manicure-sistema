@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro } from '../components/Estado.jsx';
+import { ArrowLeft, Printer } from 'lucide-react';
 
 const FORMAS = [
   { valor: 'dinheiro', label: 'Dinheiro' },
@@ -61,14 +62,14 @@ export default function FechamentoPDF() {
   return (
     <div className="px-5 pt-8 pb-12 max-w-xl mx-auto">
       <div className="print:hidden flex items-center justify-between mb-6">
-        <Link to="/financeiro" className="text-sm text-plum-600 font-medium">
-          ← Voltar
+        <Link to="/financeiro" className="text-sm text-plum-600 font-medium inline-flex items-center gap-1">
+          <ArrowLeft size={15} strokeWidth={2} /> Voltar
         </Link>
         <button
           onClick={() => window.print()}
-          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-4 py-2.5 rounded-lg"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-4 py-2.5 rounded-lg inline-flex items-center gap-1.5"
         >
-          🖨️ Salvar / Imprimir PDF
+          <Printer size={16} strokeWidth={2} /> Salvar / Imprimir PDF
         </button>
       </div>
 

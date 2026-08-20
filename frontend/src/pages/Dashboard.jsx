@@ -6,6 +6,7 @@ import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
+import { Plus, ChevronRight } from 'lucide-react';
 
 function formatarMoeda(valor) {
   return Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -103,7 +104,7 @@ export default function Dashboard() {
                   ? '1 cliente fixa está no prazo de voltar'
                   : `${clientesFixasPendentes.length} clientes fixas estão no prazo de voltar`}
               </p>
-              <span className="text-rose-500">→</span>
+              <ChevronRight size={18} strokeWidth={2} className="text-rose-500 shrink-0" />
             </Link>
           )}
 
@@ -122,8 +123,8 @@ export default function Dashboard() {
 
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display font-semibold text-lg">Agenda de hoje</h2>
-            <Link to="/agenda/novo" className="text-sm font-medium text-plum-600">
-              + Novo
+            <Link to="/agenda/novo" className="text-sm font-medium text-plum-600 inline-flex items-center gap-0.5">
+              <Plus size={15} strokeWidth={2.5} /> Novo
             </Link>
           </div>
 

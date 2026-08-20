@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
+import { Plus, ChevronRight, X } from 'lucide-react';
 
 const ABAS = [
   { valor: 'ativos', texto: 'Ativos' },
@@ -62,9 +63,17 @@ export default function Clientes() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Clientes</h1>
         <button
           onClick={() => setMostrarForm(!mostrarForm)}
-          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg inline-flex items-center gap-1"
         >
-          {mostrarForm ? 'Cancelar' : '+ Nova'}
+          {mostrarForm ? (
+            <>
+              <X size={15} strokeWidth={2.5} /> Cancelar
+            </>
+          ) : (
+            <>
+              <Plus size={15} strokeWidth={2.5} /> Nova
+            </>
+          )}
         </button>
       </div>
 
@@ -76,7 +85,7 @@ export default function Clientes() {
           <p className="text-sm font-medium text-rose-500">Clientes fixas</p>
           <p className="text-xs text-ink/50">Veja quem está no prazo de voltar</p>
         </div>
-        <span className="text-rose-500">→</span>
+        <ChevronRight size={18} strokeWidth={2} className="text-rose-500 shrink-0" />
       </Link>
 
       {mostrarForm && (

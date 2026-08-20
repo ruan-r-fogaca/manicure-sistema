@@ -8,6 +8,7 @@ import MiniCalendario from '../components/MiniCalendario.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { dataParaISO } from '../utils/data.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
+import { Plus, Bell } from 'lucide-react';
 
 const VISOES = ['Hoje', 'Amanhã', 'Semana'];
 
@@ -119,14 +120,14 @@ export default function Agenda() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Agenda</h1>
         <Link
           to="/agenda/novo"
-          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg shadow-sm"
+          className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 text-sm font-medium px-3 py-2 rounded-lg shadow-sm inline-flex items-center gap-1"
         >
-          + Novo agendamento
+          <Plus size={16} strokeWidth={2.5} /> Novo agendamento
         </Link>
       </div>
 
-      <Link to="/lembretes" className="text-sm font-medium text-plum-600 mb-3 inline-block">
-        🔔 Lembretes de amanhã
+      <Link to="/lembretes" className="text-sm font-medium text-plum-600 mb-3 inline-flex items-center gap-1">
+        <Bell size={15} strokeWidth={2} /> Lembretes de amanhã
       </Link>
 
       <div className="flex items-center gap-2 mb-2">

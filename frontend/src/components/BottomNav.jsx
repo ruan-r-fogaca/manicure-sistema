@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
+import { House, CalendarDays, Users, Wallet, Settings } from 'lucide-react';
 
 const itens = [
-  { to: '/', label: 'Início', icone: '🏠' },
-  { to: '/agenda', label: 'Agenda', icone: '📅' },
-  { to: '/clientes', label: 'Clientes', icone: '👥' },
-  { to: '/financeiro', label: 'Financeiro', icone: '💰' },
-  { to: '/configuracoes', label: 'Ajustes', icone: '⚙️' },
+  { to: '/', label: 'Início', Icone: House },
+  { to: '/agenda', label: 'Agenda', Icone: CalendarDays },
+  { to: '/clientes', label: 'Clientes', Icone: Users },
+  { to: '/financeiro', label: 'Financeiro', Icone: Wallet },
+  { to: '/configuracoes', label: 'Ajustes', Icone: Settings },
 ];
 
 export default function BottomNav() {
@@ -22,7 +23,7 @@ export default function BottomNav() {
             }`
           }
         >
-          <span className="text-lg leading-none">{item.icone}</span>
+          <item.Icone size={20} strokeWidth={2} />
           {item.label}
         </NavLink>
       ))}

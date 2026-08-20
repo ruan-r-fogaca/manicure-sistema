@@ -1,9 +1,4 @@
-const FORMAS = [
-  { valor: 'dinheiro', label: 'Dinheiro', icone: '💵' },
-  { valor: 'pix', label: 'Pix', icone: '⚡' },
-  { valor: 'credito', label: 'Crédito', icone: '💳' },
-  { valor: 'debito', label: 'Débito', icone: '💳' },
-];
+import { FORMAS_PAGAMENTO as FORMAS } from '../utils/formasPagamento.js';
 
 // Aparece toda vez que um atendimento é marcado como "atendido".
 // Some sozinho depois de escolher a forma de pagamento.
@@ -35,7 +30,7 @@ export default function PagamentoModal({ agendamento, aberto, enviando, erro, on
               onClick={() => onSelecionar(f.valor)}
               className="bg-base-100 hover:bg-plum-600/10 border border-base-200 rounded-lg py-3 text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-1.5"
             >
-              <span>{f.icone}</span>
+              <f.Icone size={18} strokeWidth={2} />
               {f.label}
             </button>
           ))}

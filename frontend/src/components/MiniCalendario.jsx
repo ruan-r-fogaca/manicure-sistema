@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -54,7 +55,7 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
         aria-label="Abrir calendário"
         title="Ver qualquer dia do ano"
       >
-        📅
+        <Calendar size={17} strokeWidth={2} />
       </button>
 
       {aberto && (
@@ -63,13 +64,13 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
           <div className="absolute right-0 mt-2 z-50 bg-white border border-base-200 rounded-xl2 shadow-lg p-3 w-64">
             <div className="flex items-center justify-between mb-2">
               <button type="button" onClick={() => mudarMes(-1)} className="px-2 py-1 text-ink/50">
-                ‹
+                <ChevronLeft size={16} strokeWidth={2} />
               </button>
               <p className="text-sm font-medium">
                 {MESES[mesVisivel]} {anoVisivel}
               </p>
               <button type="button" onClick={() => mudarMes(1)} className="px-2 py-1 text-ink/50">
-                ›
+                <ChevronRight size={16} strokeWidth={2} />
               </button>
             </div>
             <div className="grid grid-cols-7 gap-1 mb-1">

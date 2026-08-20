@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
+import { Plus, Download, ArrowLeft } from 'lucide-react';
 
 export default function Galeria() {
   const [fotos, setFotos] = useState([]);
@@ -109,10 +110,10 @@ export default function Galeria() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Galeria</h1>
         <button
           onClick={() => inputRef.current?.click()}
-          className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
+          className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg shrink-0"
           aria-label="Adicionar foto"
         >
-          +
+          <Plus size={20} strokeWidth={2.5} />
         </button>
         <input ref={inputRef} type="file" accept="image/*" capture="environment" onChange={escolherArquivo} className="hidden" />
       </div>
@@ -199,9 +200,9 @@ export default function Galeria() {
                 <button
                   onClick={() => baixarFoto(fotoAmpliada)}
                   disabled={baixando}
-                  className="flex-1 bg-plum-600/10 text-plum-600 rounded-lg py-2 text-sm font-medium disabled:opacity-60"
+                  className="flex-1 bg-plum-600/10 text-plum-600 rounded-lg py-2 text-sm font-medium disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
                 >
-                  {baixando ? 'Baixando...' : '⬇️ Baixar'}
+                  {baixando ? 'Baixando...' : (<><Download size={15} strokeWidth={2} /> Baixar</>)}
                 </button>
                 <button
                   onClick={() => excluirFoto(fotoAmpliada.id)}
@@ -218,8 +219,8 @@ export default function Galeria() {
         </div>
       )}
 
-      <Link to="/configuracoes" className="text-sm text-plum-600 mt-6 inline-block">
-        ← Voltar pra Ajustes
+      <Link to="/configuracoes" className="text-sm text-plum-600 mt-6 inline-flex items-center gap-1">
+        <ArrowLeft size={15} strokeWidth={2} /> Voltar pra Ajustes
       </Link>
     </div>
   );

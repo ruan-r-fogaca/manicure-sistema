@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { formatarDataMensagem, preencherModelo as preencherModeloTexto, linkWhatsapp } from '../utils/mensagem.js';
+import { ArrowLeft } from 'lucide-react';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -140,8 +141,8 @@ export default function ClienteDetalhes() {
 
   return (
     <div className="px-5 pt-8">
-      <Link to="/clientes" className="text-sm text-plum-600 mb-3 inline-block">
-        ← Voltar
+      <Link to="/clientes" className="text-sm text-plum-600 mb-3 inline-flex items-center gap-1">
+        <ArrowLeft size={15} strokeWidth={2} /> Voltar
       </Link>
 
       <Erro mensagem={erro} />

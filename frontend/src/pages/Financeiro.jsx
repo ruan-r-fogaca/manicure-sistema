@@ -4,15 +4,10 @@ import { api } from '../api/client.js';
 import { Carregando, Erro, Sucesso, Vazio } from '../components/Estado.jsx';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { dataParaISO, hojeISO } from '../utils/data.js';
+import { FORMAS_PAGAMENTO as FORMAS } from '../utils/formasPagamento.js';
+import { BarChart3, Bell, Download, Printer } from 'lucide-react';
 
 const ABAS = ['Dia', 'Semana', 'Mês'];
-
-const FORMAS = [
-  { valor: 'dinheiro', label: 'Dinheiro', icone: '💵' },
-  { valor: 'pix', label: 'Pix', icone: '⚡' },
-  { valor: 'credito', label: 'Crédito', icone: '💳' },
-  { valor: 'debito', label: 'Débito', icone: '💳' },
-];
 
 const STATUS_COBRANCA = {
   pendente: { cor: 'text-status-agendado', bg: 'bg-status-agendado/10', texto: 'Pendente' },
@@ -73,8 +68,8 @@ function PorFormaPagamento({ dados }) {
       <p className="text-[11px] text-ink/40 mb-2">Crédito e débito já com a taxa da maquininha descontada.</p>
       {FORMAS.map((f) => (
         <div key={f.valor} className="flex justify-between text-sm mb-1 last:mb-0">
-          <span>
-            {f.icone} {f.label}
+          <span className="inline-flex items-center gap-1.5">
+            <f.Icone size={14} strokeWidth={2} className="text-ink/40" /> {f.label}
           </span>
           <span className="font-medium">{formatarMoeda(dados[f.valor])}</span>
         </div>
@@ -148,7 +143,8 @@ function LinhaAtendimento({ item, onMarcarPago }) {
                   onClick={() => escolher(f.valor)}
                   className="text-xs font-medium bg-base-100 hover:bg-plum-600/10 border border-base-200 px-2.5 py-1.5 rounded-lg disabled:opacity-60"
                 >
-                  {f.icone} {f.label}
+                  <f.Icone size={14} strokeWidth={2} className="inline mr-1 align-[-2px]" />
+                  {f.label}
                 </button>
               ))}
               <button
@@ -368,18 +364,18 @@ export default function Financeiro() {
       <div className="flex items-start justify-between mb-5">
         <h1 className="font-display font-semibold text-2xl text-plum-600">Financeiro</h1>
         <div className="flex flex-col items-end gap-2">
-          <Link to="/relatorios" className="text-sm font-medium text-plum-600">
-            📊 Relatórios
+          <Link to="/relatorios" className="text-sm font-medium text-plum-600 inline-flex items-center gap-1">
+            <BarChart3 size={16} strokeWidth={2} /> Relatórios
           </Link>
           <Link
             to="/financeiro/vencidos"
-            className="relative text-lg leading-none"
+            className="relative text-plum-600"
             aria-label={qtdVencidas > 0 ? `${qtdVencidas} mensalidade(s) vencida(s)` : 'Mensalidades vencidas'}
             title="Mensalidades vencidas"
           >
-            🔔
+            <Bell size={20} strokeWidth={2} />
             {qtdVencidas > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-status-cancelado rounded-full border border-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-status-cancelado rounded-full border border-white" />
             )}
           </Link>
         </div>
@@ -478,15 +474,15 @@ export default function Financeiro() {
               href={api.urlCompleta(`/exportar/financeiro.csv?competencia=${competencia}`)}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-medium text-plum-600 inline-block"
+              className="text-sm font-medium text-plum-600 inline-flex items-center gap-1"
             >
-              ⬇️ Exportar {formatarCompetencia(competencia)} (CSV)
+              <Download size={15} strokeWidth={2} /> Exportar {formatarCompetencia(competencia)} (CSV)
             </a>
             <Link
               to={`/financeiro/fechamento-pdf?competencia=${competencia}`}
-              className="text-sm font-medium text-plum-600 inline-block"
+              className="text-sm font-medium text-plum-600 inline-flex items-center gap-1"
             >
-              🖨️ Fechamento {formatarCompetencia(competencia)} (PDF)
+              <Printer size={15} strokeWidth={2} /> Fechamento {formatarCompetencia(competencia)} (PDF)
             </Link>
           </div>
 

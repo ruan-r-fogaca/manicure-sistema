@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
+import { Image, Download, Plus } from 'lucide-react';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -108,8 +109,8 @@ export default function Configuracoes() {
     <div className="px-5 pt-8 pb-8">
       <div className="flex items-center justify-between mb-5">
         <h1 className="font-display font-semibold text-2xl text-plum-600">Configurações</h1>
-        <Link to="/galeria" className="text-sm font-medium text-plum-600">
-          🖼️ Galeria
+        <Link to="/galeria" className="text-sm font-medium text-plum-600 inline-flex items-center gap-1">
+          <Image size={16} strokeWidth={2} /> Galeria
         </Link>
       </div>
 
@@ -120,9 +121,9 @@ export default function Configuracoes() {
         href={api.urlCompleta('/exportar/clientes.csv')}
         target="_blank"
         rel="noreferrer"
-        className="text-sm font-medium text-plum-600 mb-5 inline-block"
+        className="text-sm font-medium text-plum-600 mb-5 inline-flex items-center gap-1"
       >
-        ⬇️ Exportar clientes (CSV)
+        <Download size={15} strokeWidth={2} /> Exportar clientes (CSV)
       </a>
 
       <h2 className="font-display font-semibold text-lg mb-1">Taxas de cartão</h2>
@@ -176,11 +177,11 @@ export default function Configuracoes() {
         <h2 className="font-display font-semibold text-lg">Serviços</h2>
         <button
           onClick={() => setCriandoServico({ nome: '', preco: '', duracao_minutos: '', ativo: true, cor: '#C14C74' })}
-          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
+          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg shrink-0"
           aria-label="Adicionar novo serviço"
           title="Adicionar novo serviço"
         >
-          +
+          <Plus size={18} strokeWidth={2.5} />
         </button>
       </div>
       <div className="flex flex-col gap-2">
@@ -228,11 +229,11 @@ export default function Configuracoes() {
         <h2 className="font-display font-semibold text-lg">Mensagens</h2>
         <button
           onClick={() => setCriandoMensagem({ nome: '', texto: '' })}
-          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
+          className="w-8 h-8 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg shrink-0"
           aria-label="Adicionar novo modelo de mensagem"
           title="Adicionar novo modelo de mensagem"
         >
-          +
+          <Plus size={18} strokeWidth={2.5} />
         </button>
       </div>
       <p className="text-xs text-ink/40 mb-3">

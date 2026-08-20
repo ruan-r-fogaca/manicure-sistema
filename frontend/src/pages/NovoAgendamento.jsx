@@ -6,6 +6,7 @@ import PagamentoModal from '../components/PagamentoModal.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { mascararTelefone } from '../utils/telefone.js';
 import { hojeISO } from '../utils/data.js';
+import { Plus, Clock } from 'lucide-react';
 
 // Cobre qualquer data/hora no passado (não só "hoje mais cedo"), incluindo dias já passados.
 function dataHoraJaPassou(data, horaInicio) {
@@ -202,11 +203,11 @@ export default function NovoAgendamento() {
             <button
               type="button"
               onClick={() => setMostrarNovoCliente((v) => !v)}
-              className="w-11 h-11 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg text-lg font-medium shrink-0"
+              className="w-11 h-11 flex items-center justify-center bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg shrink-0"
               aria-label="Adicionar nova cliente"
               title="Adicionar nova cliente"
             >
-              +
+              <Plus size={20} strokeWidth={2.5} />
             </button>
           </div>
 
@@ -319,7 +320,9 @@ export default function NovoAgendamento() {
       {avisoHorarioPassado && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
           <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-5 pb-6">
-            <h2 className="font-display font-semibold text-lg mb-1">Esse horário já passou ⏰</h2>
+            <h2 className="font-display font-semibold text-lg mb-1 inline-flex items-center gap-1.5">
+              <Clock size={18} strokeWidth={2} /> Esse horário já passou
+            </h2>
             <p className="text-sm text-ink/50 mb-4">
               Você está agendando para um horário anterior ao momento atual. Deseja continuar mesmo assim?
             </p>

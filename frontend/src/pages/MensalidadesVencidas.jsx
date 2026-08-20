@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
+import { ArrowLeft } from 'lucide-react';
 
 function formatarMoeda(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -28,8 +29,8 @@ export default function MensalidadesVencidas() {
 
   return (
     <div className="px-5 pt-8 pb-8">
-      <Link to="/financeiro" className="text-sm text-plum-600 mb-3 inline-block">
-        ← Voltar
+      <Link to="/financeiro" className="text-sm text-plum-600 mb-3 inline-flex items-center gap-1">
+        <ArrowLeft size={15} strokeWidth={2} /> Voltar
       </Link>
 
       <h1 className="font-display font-semibold text-2xl text-plum-600 mb-1">Mensalidades vencidas</h1>

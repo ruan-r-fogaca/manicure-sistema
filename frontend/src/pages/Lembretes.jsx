@@ -5,6 +5,7 @@ import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { dataParaISO } from '../utils/data.js';
 import { formatarDataMensagem, preencherModelo, linkWhatsapp } from '../utils/mensagem.js';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 
 function amanhaISO() {
   const d = new Date();
@@ -107,7 +108,9 @@ export default function Lembretes() {
     if (concluida) {
       return (
         <div className="px-5 pt-8 pb-8">
-          <h1 className="font-display font-semibold text-2xl text-plum-600 mb-1">Fila concluída ✓</h1>
+          <h1 className="font-display font-semibold text-2xl text-plum-600 mb-1 inline-flex items-center gap-2">
+            <CheckCircle2 size={22} strokeWidth={2} /> Fila concluída
+          </h1>
           <p className="text-sm text-ink/50 mb-6">
             {fila.itens.filter((it) => enviados.has(chaveItem(it))).length} de {fila.itens.length} lembrete(s) abertos no
             WhatsApp.
@@ -127,8 +130,8 @@ export default function Lembretes() {
 
     return (
       <div className="px-5 pt-8 pb-8">
-        <button onClick={() => setFila(null)} className="text-sm text-plum-600 mb-3">
-          ← Cancelar fila
+        <button onClick={() => setFila(null)} className="text-sm text-plum-600 mb-3 inline-flex items-center gap-1">
+          <ArrowLeft size={15} strokeWidth={2} /> Cancelar fila
         </button>
         <p className="text-xs text-ink/40 mb-1">
           {fila.indice + 1} de {fila.itens.length}
@@ -153,8 +156,8 @@ export default function Lembretes() {
 
   return (
     <div className="px-5 pt-8 pb-8">
-      <Link to="/agenda" className="text-sm text-plum-600 mb-3 inline-block">
-        ← Voltar
+      <Link to="/agenda" className="text-sm text-plum-600 mb-3 inline-flex items-center gap-1">
+        <ArrowLeft size={15} strokeWidth={2} /> Voltar
       </Link>
 
       <h1 className="font-display font-semibold text-2xl text-plum-600 mb-1">Lembretes de amanhã</h1>
@@ -224,7 +227,9 @@ export default function Lembretes() {
                     </p>
                   </div>
                   {enviados.has(chave) && (
-                    <span className="text-xs text-status-atendido font-medium shrink-0">Enviado ✓</span>
+                    <span className="text-xs text-status-atendido font-medium shrink-0 inline-flex items-center gap-0.5">
+                      <CheckCircle2 size={13} strokeWidth={2} /> Enviado
+                    </span>
                   )}
                   {semTelefone && <span className="text-xs text-ink/40 shrink-0">Sem telefone</span>}
                 </label>
