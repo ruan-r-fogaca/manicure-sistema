@@ -43,7 +43,7 @@ export function agruparAgendamentos(lista) {
     });
   }
 
-  // Data primeiro, depois horário — senão uma visão de vários dias (ex: semana)
-  // mistura os dias, já que 09:00 de quinta "vence" 13:30 de terça no sort.
-  return itens.sort((x, y) => x.data.localeCompare(y.data) || x.hora_inicio.localeCompare(y.hora_inicio));
+  // Data (mais recente primeiro) e depois horário (crescente dentro do dia) —
+  // numa visão de vários dias (ex: semana), o dia mais recente fica no topo.
+  return itens.sort((x, y) => y.data.localeCompare(x.data) || x.hora_inicio.localeCompare(y.hora_inicio));
 }
