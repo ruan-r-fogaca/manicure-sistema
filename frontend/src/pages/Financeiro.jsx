@@ -54,7 +54,7 @@ function ResumoCard({ dados }) {
   return (
     <div className="bg-white border border-base-200 rounded-xl2 p-4 mb-3">
       <div className="flex justify-between mb-1">
-        <span className="text-sm text-ink/60">Atendimentos realizados</span>
+        <span className="text-sm text-ink/60">Faturado (bruto)</span>
         <span className="font-display font-semibold text-plum-600">{formatarMoeda(dados.atendimentos_realizados)}</span>
       </div>
       <div className="flex justify-between">
