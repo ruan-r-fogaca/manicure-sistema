@@ -321,7 +321,7 @@ export default function NovoAgendamento() {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
           <div className="bg-white w-full sm:max-w-sm rounded-t-2xl sm:rounded-xl2 p-5 pb-6">
             <h2 className="font-display font-semibold text-lg mb-1 inline-flex items-center gap-1.5">
-              <Clock size={18} strokeWidth={2} /> Esse horário já passou
+              <Clock size={18} strokeWidth={2} className="text-status-pendente" /> Esse horário já passou
             </h2>
             <p className="text-sm text-ink/50 mb-4">
               Você está agendando para um horário anterior ao momento atual. Deseja continuar mesmo assim?

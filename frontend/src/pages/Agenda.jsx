@@ -10,7 +10,7 @@ import { dataParaISO } from '../utils/data.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { Plus, Bell } from 'lucide-react';
 
-const VISOES = ['Hoje', 'Amanhã', 'Semana'];
+const VISOES = ['Hoje', 'Amanhã', 'Semana', 'Mês'];
 
 function isoHoje(offsetDias = 0) {
   const d = new Date();
@@ -24,6 +24,13 @@ function inicioFimSemana() {
   inicio.setDate(hoje.getDate() - hoje.getDay());
   const fim = new Date(inicio);
   fim.setDate(inicio.getDate() + 6);
+  return { inicio: dataParaISO(inicio), fim: dataParaISO(fim) };
+}
+
+function inicioFimMes() {
+  const hoje = new Date();
+  const inicio = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const fim = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
   return { inicio: dataParaISO(inicio), fim: dataParaISO(fim) };
 }
 
@@ -59,8 +66,11 @@ export default function Agenda() {
       promessa = api.get(`/agendamentos?data=${isoHoje(0)}`);
     } else if (visao === 'Amanhã') {
       promessa = api.get(`/agendamentos?data=${isoHoje(1)}`);
-    } else {
+    } else if (visao === 'Semana') {
       const { inicio, fim } = inicioFimSemana();
+      promessa = api.get(`/agendamentos?inicio=${inicio}&fim=${fim}`);
+    } else {
+      const { inicio, fim } = inicioFimMes();
       promessa = api.get(`/agendamentos?inicio=${inicio}&fim=${fim}`);
     }
     promessa
@@ -112,7 +122,7 @@ export default function Agenda() {
     setDataEscolhida(iso);
   }
 
-  const mostrarCabecalhoPorDia = visao === 'Semana' && !dataEscolhida;
+  const mostrarCabecalhoPorDia = (visao === 'Semana' || visao === 'Mês') && !dataEscolhida;
 
   return (
     <div className="px-5 pt-8">

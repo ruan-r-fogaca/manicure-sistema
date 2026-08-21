@@ -30,7 +30,7 @@ export default function PagamentoModal({ agendamento, aberto, enviando, erro, on
               onClick={() => onSelecionar(f.valor)}
               className="bg-base-100 hover:bg-plum-600/10 border border-base-200 rounded-lg py-3 text-sm font-medium disabled:opacity-60 flex items-center justify-center gap-1.5"
             >
-              <f.Icone size={18} strokeWidth={2} />
+              <f.Icone size={18} strokeWidth={2} className={f.cor} />
               {f.label}
             </button>
           ))}

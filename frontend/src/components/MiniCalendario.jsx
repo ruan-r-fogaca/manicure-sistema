@@ -63,13 +63,13 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
           <div className="fixed inset-0 z-40" onClick={() => setAberto(false)} />
           <div className="absolute right-0 mt-2 z-50 bg-white border border-base-200 rounded-xl2 shadow-lg p-3 w-64">
             <div className="flex items-center justify-between mb-2">
-              <button type="button" onClick={() => mudarMes(-1)} className="px-2 py-1 text-ink/50">
+              <button type="button" onClick={() => mudarMes(-1)} className="px-2 py-1 text-plum-600">
                 <ChevronLeft size={16} strokeWidth={2} />
               </button>
               <p className="text-sm font-medium">
                 {MESES[mesVisivel]} {anoVisivel}
               </p>
-              <button type="button" onClick={() => mudarMes(1)} className="px-2 py-1 text-ink/50">
+              <button type="button" onClick={() => mudarMes(1)} className="px-2 py-1 text-plum-600">
                 <ChevronRight size={16} strokeWidth={2} />
               </button>
             </div>

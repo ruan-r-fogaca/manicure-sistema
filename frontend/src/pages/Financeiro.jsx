@@ -69,7 +69,7 @@ function PorFormaPagamento({ dados }) {
       {FORMAS.map((f) => (
         <div key={f.valor} className="flex justify-between text-sm mb-1 last:mb-0">
           <span className="inline-flex items-center gap-1.5">
-            <f.Icone size={14} strokeWidth={2} className="text-ink/40" /> {f.label}
+            <f.Icone size={14} strokeWidth={2} className={f.cor} /> {f.label}
           </span>
           <span className="font-medium">{formatarMoeda(dados[f.valor])}</span>
         </div>
@@ -143,7 +143,7 @@ function LinhaAtendimento({ item, onMarcarPago }) {
                   onClick={() => escolher(f.valor)}
                   className="text-xs font-medium bg-base-100 hover:bg-plum-600/10 border border-base-200 px-2.5 py-1.5 rounded-lg disabled:opacity-60"
                 >
-                  <f.Icone size={14} strokeWidth={2} className="inline mr-1 align-[-2px]" />
+                  <f.Icone size={14} strokeWidth={2} className={`inline mr-1 align-[-2px] ${f.cor}`} />
                   {f.label}
                 </button>
               ))}
