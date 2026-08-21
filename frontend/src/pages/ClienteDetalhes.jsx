@@ -51,6 +51,7 @@ export default function ClienteDetalhes() {
           valor_mensal_fixo: c.valor_mensal_fixo || '',
           valor_por_servico: c.valor_por_servico || '',
           dia_cobranca: c.dia_cobranca || '',
+          meta_atendimentos_mes: c.meta_atendimentos_mes || '',
         });
         setHistorico(h);
         setMensagens(m);
@@ -73,6 +74,7 @@ export default function ClienteDetalhes() {
         valor_mensal_fixo: form.valor_mensal_fixo ? Number(form.valor_mensal_fixo) : null,
         valor_por_servico: form.valor_por_servico ? Number(form.valor_por_servico) : null,
         dia_cobranca: form.dia_cobranca ? Number(form.dia_cobranca) : null,
+        meta_atendimentos_mes: form.meta_atendimentos_mes ? Number(form.meta_atendimentos_mes) : null,
       });
       setEditando(false);
       carregar();
@@ -175,7 +177,10 @@ export default function ClienteDetalhes() {
               <p className="text-xs text-ink/50 mt-0.5">{formatarMoeda(cliente.valor_mensal_fixo)} / mês</p>
             )}
             {cliente.tipo_cobranca === 'mensal_por_servico' && (
-              <p className="text-xs text-ink/50 mt-0.5">{formatarMoeda(cliente.valor_por_servico)} por atendimento no mês</p>
+              <p className="text-xs text-ink/50 mt-0.5">
+                {formatarMoeda(cliente.valor_por_servico)} por atendimento no mês
+                {cliente.meta_atendimentos_mes ? ` · meta de ${cliente.meta_atendimentos_mes}/mês` : ''}
+              </p>
             )}
             {ehMensal && cliente.dia_cobranca && (
               <p className="text-xs text-ink/50 mt-0.5">Cobrança todo dia {cliente.dia_cobranca}</p>
@@ -272,14 +277,24 @@ export default function ClienteDetalhes() {
               />
             )}
             {form.tipo_cobranca === 'mensal_por_servico' && (
-              <input
-                type="number"
-                step="0.01"
-                value={form.valor_por_servico}
-                onChange={(e) => setForm({ ...form, valor_por_servico: e.target.value })}
-                className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
-                placeholder="Valor por serviço realizado (R$)"
-              />
+              <>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.valor_por_servico}
+                  onChange={(e) => setForm({ ...form, valor_por_servico: e.target.value })}
+                  className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
+                  placeholder="Valor por serviço realizado (R$)"
+                />
+                <input
+                  type="number"
+                  min="1"
+                  value={form.meta_atendimentos_mes}
+                  onChange={(e) => setForm({ ...form, meta_atendimentos_mes: e.target.value })}
+                  className="border border-base-200 rounded-lg px-3 py-2.5 w-full mb-2"
+                  placeholder="Meta de atendimentos por mês (opcional)"
+                />
+              </>
             )}
             {form.tipo_cobranca !== 'por_atendimento' && (
               <input

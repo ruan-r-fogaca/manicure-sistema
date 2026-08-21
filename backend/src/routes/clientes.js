@@ -128,6 +128,7 @@ router.post('/', async (req, res) => {
     valor_mensal_fixo,
     valor_por_servico,
     dia_cobranca,
+    meta_atendimentos_mes,
   } = req.body;
   if (!nome) return res.status(400).json({ erro: 'nome é obrigatório.' });
 
@@ -155,6 +156,7 @@ router.post('/', async (req, res) => {
       valor_mensal_fixo: tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null,
       valor_por_servico: tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null,
       dia_cobranca: dia_cobranca || null,
+      meta_atendimentos_mes: tipo_cobranca === 'mensal_por_servico' ? meta_atendimentos_mes || null : null,
     })
     .select()
     .single();
@@ -176,6 +178,7 @@ router.put('/:id', async (req, res) => {
     valor_mensal_fixo,
     valor_por_servico,
     dia_cobranca,
+    meta_atendimentos_mes,
   } = req.body;
 
   const erroCobranca = validarCobranca(req.body);
@@ -203,6 +206,7 @@ router.put('/:id', async (req, res) => {
     payload.tipo_cobranca = tipo_cobranca;
     payload.valor_mensal_fixo = tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null;
     payload.valor_por_servico = tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null;
+    payload.meta_atendimentos_mes = tipo_cobranca === 'mensal_por_servico' ? meta_atendimentos_mes || null : null;
   }
   if (dia_cobranca !== undefined) payload.dia_cobranca = dia_cobranca || null;
 

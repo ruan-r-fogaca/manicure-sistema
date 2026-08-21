@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
 import { hojeBrasilISO } from '../utils/horarios.js';
+import { contarAtendimentosNoMes } from '../utils/cobrancaHelpers.js';
 
 const router = Router();
 
@@ -8,18 +9,38 @@ const VALIDOS_STATUS = ['pendente', 'pago', 'atrasado', 'cancelado'];
 const VALIDOS_FORMA = ['pix', 'dinheiro', 'credito', 'debito'];
 
 router.get('/', async (req, res) => {
-  let query = supabase
-    .from('cobrancas')
-    .select('*, clientes(nome, telefone, tipo_cobranca)')
-    .order('competencia', { ascending: false });
+  try {
+    let query = supabase
+      .from('cobrancas')
+      .select('*, clientes(nome, telefone, tipo_cobranca, valor_por_servico, meta_atendimentos_mes)')
+      .order('competencia', { ascending: false });
 
-  if (req.query.competencia) {
-    query = query.eq('competencia', `${req.query.competencia}-01`);
+    if (req.query.competencia) {
+      query = query.eq('competencia', `${req.query.competencia}-01`);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const comValoresAoVivo = await Promise.all(
+      data.map(async (cobranca) => {
+        const aindaAberta = cobranca.status === 'pendente' || cobranca.status === 'atrasado';
+        if (cobranca.tipo !== 'mensal_por_servico' || !aindaAberta) return cobranca;
+
+        const quantidade = await contarAtendimentosNoMes(cobranca.cliente_id, cobranca.competencia);
+        const valorPorServico = Number(cobranca.clientes?.valor_por_servico || 0);
+        return {
+          ...cobranca,
+          quantidade_atendimentos: quantidade,
+          valor_cobrado: quantidade * valorPorServico,
+        };
+      })
+    );
+
+    res.json(comValoresAoVivo);
+  } catch (error) {
+    res.status(500).json({ erro: error.message });
   }
-
-  const { data, error } = await query;
-  if (error) return res.status(500).json({ erro: error.message });
-  res.json(data);
 });
 
 // GET /api/cobrancas/vencidas
@@ -61,16 +82,9 @@ router.get('/vencidas', async (req, res) => {
         const dataVencimento = `${hoje.slice(0, 7)}-${String(diaVencimento).padStart(2, '0')}`;
 
         let valor = cobranca ? Number(cobranca.valor_cobrado) : Number(cliente.valor_mensal_fixo || 0);
-        if (!cobranca && cliente.tipo_cobranca === 'mensal_por_servico') {
-          const fim = `${hoje.slice(0, 7)}-${String(ultimoDiaMes).padStart(2, '0')}`;
-          const { data: atendimentos } = await supabase
-            .from('agendamentos')
-            .select('id')
-            .eq('cliente_id', cliente.id)
-            .in('status', ['atendido', 'pendente'])
-            .gte('data', competencia)
-            .lte('data', fim);
-          valor = (atendimentos?.length || 0) * Number(cliente.valor_por_servico || 0);
+        if (cliente.tipo_cobranca === 'mensal_por_servico') {
+          const quantidade = await contarAtendimentosNoMes(cliente.id, competencia);
+          valor = quantidade * Number(cliente.valor_por_servico || 0);
         }
 
         return {

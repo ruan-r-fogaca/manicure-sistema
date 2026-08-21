@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { supabase } from '../supabaseClient.js';
 import { hojeBrasilISO } from '../utils/horarios.js';
+import { contarAtendimentosNoMes } from '../utils/cobrancaHelpers.js';
 
 const router = Router();
 
@@ -86,7 +87,10 @@ async function origemPorTipo(inicio, fim, competencia, taxas) {
     { data: avulsoAtendido, error: erroAvulso },
     { data: avulsoPago, error: erroAvulsoPago },
   ] = await Promise.all([
-    supabase.from('cobrancas').select('valor_cobrado, tipo, status, forma_pagamento').eq('competencia', competencia),
+    supabase
+      .from('cobrancas')
+      .select('cliente_id, valor_cobrado, tipo, status, forma_pagamento, clientes(valor_por_servico)')
+      .eq('competencia', competencia),
     supabase
       .from('agendamentos')
       .select('valor, clientes!inner(tipo_cobranca)')
@@ -106,10 +110,21 @@ async function origemPorTipo(inicio, fim, competencia, taxas) {
   if (erroAvulso) throw erroAvulso;
   if (erroAvulsoPago) throw erroAvulsoPago;
 
+  // Cobrança mensal_por_servico ainda aberta (não paga) reflete a quantidade
+  // real de atendimentos no mês até agora, não a "foto" de quando foi gerada.
+  const cobrancasMesAoVivo = await Promise.all(
+    cobrancasMes.map(async (c) => {
+      const aindaAberta = c.status === 'pendente' || c.status === 'atrasado';
+      if (c.tipo !== 'mensal_por_servico' || !aindaAberta) return c;
+      const quantidade = await contarAtendimentosNoMes(c.cliente_id, competencia);
+      return { ...c, valor_cobrado: quantidade * Number(c.clientes?.valor_por_servico || 0) };
+    })
+  );
+
   // aplicarTaxa só faz sentido em "pago" (dinheiro já recebido) — o valor
   // "cobrado" é o que foi faturado, independente de como acabou sendo pago.
   const somaTipo = (tipo, filtroStatus, aplicarTaxa = false) =>
-    cobrancasMes
+    cobrancasMesAoVivo
       .filter((c) => c.tipo === tipo && (!filtroStatus || filtroStatus.includes(c.status)))
       .reduce((s, c) => s + (aplicarTaxa ? valorLiquido(c.valor_cobrado, c.forma_pagamento, taxas) : Number(c.valor_cobrado)), 0);
 
