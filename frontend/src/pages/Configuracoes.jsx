@@ -110,7 +110,7 @@ export default function Configuracoes() {
       <div className="flex items-center justify-between mb-5">
         <h1 className="font-display font-semibold text-2xl text-plum-600">Configurações</h1>
         <Link to="/galeria" className="text-sm font-medium text-plum-600 inline-flex items-center gap-1">
-          <Image size={16} strokeWidth={2} /> Galeria
+          <Image size={16} strokeWidth={2} className="text-rose-500" /> Galeria
         </Link>
       </div>
 

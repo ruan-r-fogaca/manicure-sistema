@@ -366,11 +366,11 @@ export default function Financeiro() {
         <h1 className="font-display font-semibold text-2xl text-plum-600">Financeiro</h1>
         <div className="flex flex-col items-end gap-2">
           <Link to="/relatorios" className="text-sm font-medium text-plum-600 inline-flex items-center gap-1">
-            <BarChart3 size={16} strokeWidth={2} /> Relatórios
+            <BarChart3 size={16} strokeWidth={2} className="text-status-confirmado" /> Relatórios
           </Link>
           <Link
             to="/financeiro/vencidos"
-            className="relative text-plum-600"
+            className="relative text-status-agendado"
             aria-label={qtdVencidas > 0 ? `${qtdVencidas} mensalidade(s) vencida(s)` : 'Mensalidades vencidas'}
             title="Mensalidades vencidas"
           >
