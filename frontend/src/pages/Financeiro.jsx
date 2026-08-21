@@ -511,7 +511,10 @@ export default function Financeiro() {
             <div className="flex flex-col gap-2">
               {cobrancas
                 .slice()
-                .sort((a, b) => (a.tipo === b.tipo ? 0 : a.tipo === 'mensal_fixo' ? -1 : 1))
+                .sort((a, b) => {
+                  if (a.tipo !== b.tipo) return a.tipo === 'mensal_fixo' ? -1 : 1;
+                  return (a.quantidade_atendimentos ?? 0) - (b.quantidade_atendimentos ?? 0);
+                })
                 .map((c) => (
                   <LinhaCobranca key={c.id} cobranca={c} onAtualizar={() => Promise.all([carregarCobrancas(), carregarResumo()])} />
                 ))}
