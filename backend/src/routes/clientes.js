@@ -156,7 +156,7 @@ router.post('/', async (req, res) => {
       valor_mensal_fixo: tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null,
       valor_por_servico: tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null,
       dia_cobranca: dia_cobranca || null,
-      meta_atendimentos_mes: tipo_cobranca === 'mensal_por_servico' ? meta_atendimentos_mes || null : null,
+      meta_atendimentos_mes: tipo_cobranca !== 'por_atendimento' ? meta_atendimentos_mes || null : null,
     })
     .select()
     .single();
@@ -206,7 +206,7 @@ router.put('/:id', async (req, res) => {
     payload.tipo_cobranca = tipo_cobranca;
     payload.valor_mensal_fixo = tipo_cobranca === 'mensal_fixo' ? valor_mensal_fixo : null;
     payload.valor_por_servico = tipo_cobranca === 'mensal_por_servico' ? valor_por_servico : null;
-    payload.meta_atendimentos_mes = tipo_cobranca === 'mensal_por_servico' ? meta_atendimentos_mes || null : null;
+    payload.meta_atendimentos_mes = tipo_cobranca !== 'por_atendimento' ? meta_atendimentos_mes || null : null;
   }
   if (dia_cobranca !== undefined) payload.dia_cobranca = dia_cobranca || null;
 

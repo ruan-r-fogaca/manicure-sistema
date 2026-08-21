@@ -25,9 +25,13 @@ router.get('/', async (req, res) => {
     const comValoresAoVivo = await Promise.all(
       data.map(async (cobranca) => {
         const aindaAberta = cobranca.status === 'pendente' || cobranca.status === 'atrasado';
-        if (cobranca.tipo !== 'mensal_por_servico' || !aindaAberta) return cobranca;
+        if (!aindaAberta) return cobranca;
 
         const quantidade = await contarAtendimentosNoMes(cobranca.cliente_id, cobranca.competencia);
+        // mensal_fixo cobra valor fixo sempre — a contagem aqui é só pra
+        // mostrar progresso (ex: "3/6 atendimentos"), não muda o valor.
+        if (cobranca.tipo === 'mensal_fixo') return { ...cobranca, quantidade_atendimentos: quantidade };
+
         const valorPorServico = Number(cobranca.clientes?.valor_por_servico || 0);
         return {
           ...cobranca,

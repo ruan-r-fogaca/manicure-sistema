@@ -199,11 +199,10 @@ function LinhaCobranca({ cobranca, onAtualizar }) {
         <div>
           <p className="font-medium text-sm">{cobranca.clientes?.nome}</p>
           <p className="text-xs text-ink/50">
-            {cobranca.tipo === 'mensal_fixo'
-              ? 'Mensal fixo'
-              : `Mensal por serviço · ${cobranca.quantidade_atendimentos ?? 0}${
-                  cobranca.clientes?.meta_atendimentos_mes ? `/${cobranca.clientes.meta_atendimentos_mes}` : ''
-                } atendimento(s)`}
+            {cobranca.tipo === 'mensal_fixo' ? 'Mensal fixo' : 'Mensal por serviço'}
+            {' · '}
+            {cobranca.quantidade_atendimentos ?? 0}
+            {cobranca.clientes?.meta_atendimentos_mes ? `/${cobranca.clientes.meta_atendimentos_mes}` : ''} atendimento(s)
           </p>
         </div>
         <span className={`text-[11px] font-medium px-2 py-1 rounded-full ${cfg.bg} ${cfg.cor}`}>{cfg.texto}</span>
