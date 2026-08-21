@@ -2,11 +2,11 @@ import { NavLink } from 'react-router-dom';
 import { House, CalendarDays, Users, Wallet, Settings } from 'lucide-react';
 
 const itens = [
-  { to: '/', label: 'Início', Icone: House },
-  { to: '/agenda', label: 'Agenda', Icone: CalendarDays },
-  { to: '/clientes', label: 'Clientes', Icone: Users },
-  { to: '/financeiro', label: 'Financeiro', Icone: Wallet },
-  { to: '/configuracoes', label: 'Ajustes', Icone: Settings },
+  { to: '/', label: 'Início', Icone: House, cor: 'text-plum-600', bg: 'bg-plum-600/10' },
+  { to: '/agenda', label: 'Agenda', Icone: CalendarDays, cor: 'text-status-confirmado', bg: 'bg-status-confirmado/10' },
+  { to: '/clientes', label: 'Clientes', Icone: Users, cor: 'text-rose-500', bg: 'bg-rose-500/10' },
+  { to: '/financeiro', label: 'Financeiro', Icone: Wallet, cor: 'text-status-atendido', bg: 'bg-status-atendido/10' },
+  { to: '/configuracoes', label: 'Ajustes', Icone: Settings, cor: 'text-status-pendente', bg: 'bg-status-pendente/10' },
 ];
 
 export default function BottomNav() {
@@ -18,8 +18,8 @@ export default function BottomNav() {
           to={item.to}
           end={item.to === '/'}
           className={({ isActive }) =>
-            `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-              isActive ? 'text-plum-600 bg-plum-600/10' : 'text-ink/50'
+            `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${item.cor} ${
+              isActive ? item.bg : 'opacity-60'
             }`
           }
         >
