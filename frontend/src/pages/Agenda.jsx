@@ -124,6 +124,12 @@ export default function Agenda() {
   }
 
   const mostrarCabecalhoPorDia = (visao === 'Semana' || visao === 'Mês') && !dataEscolhida;
+  const mostrarGuiaMeses = visao === 'Mês' && !dataEscolhida;
+  const diasDoMes = Object.keys(agrupadosPorDia);
+
+  function pularParaDia(dia) {
+    document.getElementById(`dia-${dia}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   return (
     <div className="px-5 pt-8">
@@ -176,7 +182,7 @@ export default function Agenda() {
         <Vazio titulo="Nada por aqui" descricao="Não há agendamentos para esse período." />
       ) : (
         Object.entries(agrupadosPorDia).map(([dia, itensDoDia]) => (
-          <div key={dia} className="mb-5">
+          <div key={dia} id={`dia-${dia}`} className="mb-5 scroll-mt-4">
             {mostrarCabecalhoPorDia && (
               <p className="text-xs font-semibold uppercase tracking-wide text-ink/40 mb-2">
                 {formatarDataCurta(dia)}
@@ -204,6 +210,20 @@ export default function Agenda() {
             </div>
           </div>
         ))
+      )}
+
+      {mostrarGuiaMeses && diasDoMes.length > 1 && (
+        <div className="fixed right-1 top-1/2 -translate-y-1/2 z-30 flex flex-col items-end gap-0.5 max-h-[70vh] overflow-y-auto py-2 px-1">
+          {diasDoMes.map((dia) => (
+            <button
+              key={dia}
+              onClick={() => pularParaDia(dia)}
+              className="text-[10px] leading-none text-plum-600/70 font-medium px-1 py-0.5 active:text-plum-600 active:font-semibold"
+            >
+              {dia.slice(8, 10)}
+            </button>
+          ))}
+        </div>
       )}
 
       <PagamentoModal
