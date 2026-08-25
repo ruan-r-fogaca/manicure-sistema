@@ -125,7 +125,7 @@ export default function Dashboard() {
               {itensHoje.map((item) => (
                 <div
                   key={item.ids.join('-')}
-                  className="relative bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
+                  className="relative overflow-hidden bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
                 >
                   <BarraServicos cores={item.coresServicos} />
                   <div className="cursor-pointer" onClick={() => setItemEditando(item)}>

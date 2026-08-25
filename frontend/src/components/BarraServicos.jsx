@@ -4,7 +4,7 @@
 export default function BarraServicos({ cores }) {
   if (!cores || cores.length === 0) return null;
   return (
-    <div className="absolute left-0 top-0 bottom-0 w-1 flex flex-col rounded-l-xl2 overflow-hidden">
+    <div className="absolute left-0 top-0 bottom-0 w-1 flex flex-col">
       {cores.map((cor, i) => (
         <div key={i} className="flex-1" style={{ backgroundColor: cor }} />
       ))}

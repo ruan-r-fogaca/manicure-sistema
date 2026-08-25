@@ -194,7 +194,7 @@ export default function Agenda() {
             )}
             <div className="flex flex-col gap-2">
               {itensDoDia.map((item) => (
-                <div key={item.ids.join('-')} className="relative bg-white rounded-xl2 p-3 border border-base-200">
+                <div key={item.ids.join('-')} className="relative overflow-hidden bg-white rounded-xl2 p-3 border border-base-200">
                   <BarraServicos cores={item.coresServicos} />
                   <div className="flex justify-between items-start mb-1.5">
                     <div>
