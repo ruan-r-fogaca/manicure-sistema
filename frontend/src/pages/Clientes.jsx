@@ -13,6 +13,7 @@ const ABAS = [
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
+  const [totalAtivos, setTotalAtivos] = useState(null);
   const [busca, setBusca] = useState('');
   const [aba, setAba] = useState('ativos');
   const [carregando, setCarregando] = useState(true);
@@ -21,6 +22,13 @@ export default function Clientes() {
   const [novoNome, setNovoNome] = useState('');
   const [novoTelefone, setNovoTelefone] = useState('');
   const [salvando, setSalvando] = useState(false);
+
+  function carregarTotalAtivos() {
+    api
+      .get('/clientes?status=ativos')
+      .then((lista) => setTotalAtivos(lista.length))
+      .catch(() => {});
+  }
 
   function carregar() {
     setCarregando(true);
@@ -40,6 +48,8 @@ export default function Clientes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busca, aba]);
 
+  useEffect(carregarTotalAtivos, []);
+
   async function handleAdicionar(e) {
     e.preventDefault();
     if (!novoNome.trim()) return;
@@ -50,6 +60,7 @@ export default function Clientes() {
       setNovoTelefone('');
       setMostrarForm(false);
       carregar();
+      carregarTotalAtivos();
     } catch (e) {
       setErro(e.message);
     } finally {
@@ -118,7 +129,7 @@ export default function Clientes() {
         className="w-full border border-base-200 bg-white rounded-lg px-3 py-2.5 mb-3"
       />
 
-      <div className="flex gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4">
         {ABAS.map((a) => (
           <button
             key={a.valor}
@@ -130,6 +141,9 @@ export default function Clientes() {
             {a.texto}
           </button>
         ))}
+        {totalAtivos !== null && (
+          <p className="text-xs text-ink/40 ml-auto shrink-0">{totalAtivos} ativa(s)</p>
+        )}
       </div>
 
       <Erro mensagem={erro} />
