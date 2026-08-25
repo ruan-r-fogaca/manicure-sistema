@@ -35,19 +35,11 @@ router.get('/clientes.csv', async (req, res) => {
   const { data, error } = await supabase.from('clientes').select('*').order('nome');
   if (error) return res.status(500).json({ erro: error.message });
 
-  const linhas = [['Nome', 'Telefone', 'Tipo de cobrança', 'Valor mensal', 'Cliente fixa', 'Frequência (dias)', 'Ativo']];
+  const linhas = [['Nome', 'Telefone', 'Tipo de cobrança', 'Valor mensal', 'Ativo']];
   for (const c of data) {
     const valorMensal =
       c.tipo_cobranca === 'mensal_fixo' ? c.valor_mensal_fixo : c.tipo_cobranca === 'mensal_por_servico' ? c.valor_por_servico : '';
-    linhas.push([
-      c.nome,
-      c.telefone || '',
-      rotuloTipoCobranca(c.tipo_cobranca),
-      valorMensal ?? '',
-      c.cliente_fixa ? 'Sim' : 'Não',
-      c.frequencia_dias ?? '',
-      c.ativo ? 'Sim' : 'Não',
-    ]);
+    linhas.push([c.nome, c.telefone || '', rotuloTipoCobranca(c.tipo_cobranca), valorMensal ?? '', c.ativo ? 'Sim' : 'Não']);
   }
   enviarCsv(res, 'clientes.csv', linhas);
 });

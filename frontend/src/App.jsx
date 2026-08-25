@@ -8,7 +8,6 @@ const Agenda = lazy(() => import('./pages/Agenda.jsx'));
 const NovoAgendamento = lazy(() => import('./pages/NovoAgendamento.jsx'));
 const Clientes = lazy(() => import('./pages/Clientes.jsx'));
 const ClienteDetalhes = lazy(() => import('./pages/ClienteDetalhes.jsx'));
-const ClientesFixas = lazy(() => import('./pages/ClientesFixas.jsx'));
 const Financeiro = lazy(() => import('./pages/Financeiro.jsx'));
 const MensalidadesVencidas = lazy(() => import('./pages/MensalidadesVencidas.jsx'));
 const FechamentoPDF = lazy(() => import('./pages/FechamentoPDF.jsx'));
@@ -26,7 +25,6 @@ export default function App() {
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/agenda/novo" element={<NovoAgendamento />} />
           <Route path="/clientes" element={<Clientes />} />
-          <Route path="/clientes/fixas" element={<ClientesFixas />} />
           <Route path="/clientes/:id" element={<ClienteDetalhes />} />
           <Route path="/financeiro" element={<Financeiro />} />
           <Route path="/financeiro/vencidos" element={<MensalidadesVencidas />} />

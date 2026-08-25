@@ -72,52 +72,10 @@ router.get('/:id/historico', async (req, res) => {
   res.json(data);
 });
 
-router.get('/fixas/proximas', async (req, res) => {
-  const apenasProximas = req.query.apenas_proximas === 'true';
-
-  const { data, error } = await supabase
-    .from('clientes')
-    .select('*')
-    .eq('cliente_fixa', true)
-    .eq('ativo', true);
-  if (error) return res.status(500).json({ erro: error.message });
-
-  const hoje = new Date();
-  const entradas = await Promise.all(
-    data.map(async (cliente) => {
-      const { data: ultimo } = await supabase
-        .from('agendamentos')
-        .select('data')
-        .eq('cliente_id', cliente.id)
-        .in('status', ['atendido', 'pendente'])
-        .order('data', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const entrada = { ...cliente, proxima_data_sugerida: null, dias_restantes: null };
-      if (ultimo && cliente.frequencia_dias) {
-        const dataUltimo = new Date(ultimo.data + 'T12:00:00');
-        const proximaData = new Date(dataUltimo);
-        proximaData.setDate(proximaData.getDate() + cliente.frequencia_dias);
-        entrada.proxima_data_sugerida = proximaData.toISOString().slice(0, 10);
-        entrada.dias_restantes = Math.ceil((proximaData - hoje) / (1000 * 60 * 60 * 24));
-      }
-      return entrada;
-    })
-  );
-
-  const resultado = apenasProximas
-    ? entradas.filter((e) => e.dias_restantes !== null && e.dias_restantes <= 3)
-    : entradas;
-  res.json(resultado);
-});
-
 router.post('/', async (req, res) => {
   const {
     nome,
     telefone,
-    cliente_fixa = false,
-    frequencia_dias,
     servico_habitual_id,
     horario_habitual,
     observacoes,
@@ -143,8 +101,6 @@ router.post('/', async (req, res) => {
     .insert({
       nome: nome.trim(),
       telefone,
-      cliente_fixa,
-      frequencia_dias,
       servico_habitual_id,
       horario_habitual,
       observacoes,
@@ -165,8 +121,6 @@ router.put('/:id', async (req, res) => {
   const {
     nome,
     telefone,
-    cliente_fixa,
-    frequencia_dias,
     servico_habitual_id,
     horario_habitual,
     observacoes,
@@ -192,8 +146,6 @@ router.put('/:id', async (req, res) => {
   const payload = {
     nome: nome ? nome.trim() : nome,
     telefone,
-    cliente_fixa,
-    frequencia_dias,
     servico_habitual_id,
     horario_habitual,
     observacoes,

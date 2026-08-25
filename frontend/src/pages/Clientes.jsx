@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api/client.js';
 import { Carregando, Erro, Vazio } from '../components/Estado.jsx';
 import { mascararTelefone } from '../utils/telefone.js';
-import { Plus, ChevronRight, X } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 const ABAS = [
   { valor: 'ativos', texto: 'Ativos' },
@@ -94,17 +94,6 @@ export default function Clientes() {
         </button>
       </div>
 
-      <Link
-        to="/clientes/fixas"
-        className="flex items-center justify-between bg-rose-400/10 border border-rose-400/30 rounded-xl2 px-4 py-3 mb-5"
-      >
-        <div>
-          <p className="text-sm font-medium text-rose-500">Clientes fixas</p>
-          <p className="text-xs text-ink/50">Veja quem está no prazo de voltar</p>
-        </div>
-        <ChevronRight size={18} strokeWidth={2} className="text-rose-500 shrink-0" />
-      </Link>
-
       {mostrarForm && (
         <form onSubmit={handleAdicionar} className="bg-white border border-base-200 rounded-xl2 p-4 mb-5 flex flex-col gap-3">
           <input
@@ -191,11 +180,6 @@ export default function Clientes() {
                 {c.tipo_cobranca && c.tipo_cobranca !== 'por_atendimento' && (
                   <span className="text-[11px] bg-plum-600/10 text-plum-600 font-medium px-2 py-1 rounded-full">
                     Mensal
-                  </span>
-                )}
-                {c.cliente_fixa && (
-                  <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
-                    Fixa
                   </span>
                 )}
               </div>

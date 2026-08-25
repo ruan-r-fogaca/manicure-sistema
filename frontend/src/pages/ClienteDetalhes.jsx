@@ -45,8 +45,6 @@ export default function ClienteDetalhes() {
         setForm({
           nome: c.nome,
           telefone: c.telefone || '',
-          cliente_fixa: c.cliente_fixa,
-          frequencia_dias: c.frequencia_dias || '',
           tipo_cobranca: c.tipo_cobranca || 'por_atendimento',
           valor_mensal_fixo: c.valor_mensal_fixo || '',
           valor_por_servico: c.valor_por_servico || '',
@@ -70,7 +68,6 @@ export default function ClienteDetalhes() {
     try {
       await api.put(`/clientes/${id}`, {
         ...form,
-        frequencia_dias: form.frequencia_dias ? Number(form.frequencia_dias) : null,
         valor_mensal_fixo: form.valor_mensal_fixo ? Number(form.valor_mensal_fixo) : null,
         valor_por_servico: form.valor_por_servico ? Number(form.valor_por_servico) : null,
         dia_cobranca: form.dia_cobranca ? Number(form.dia_cobranca) : null,
@@ -162,11 +159,6 @@ export default function ClienteDetalhes() {
                   Inativa
                 </span>
               )}
-              {cliente.cliente_fixa && (
-                <span className="text-[11px] bg-rose-400/15 text-rose-500 font-medium px-2 py-1 rounded-full">
-                  Fixa · a cada {cliente.frequencia_dias} dias
-                </span>
-              )}
             </div>
           </div>
 
@@ -237,24 +229,6 @@ export default function ClienteDetalhes() {
             className="border border-base-200 rounded-lg px-3 py-2.5"
             placeholder="Telefone"
           />
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={form.cliente_fixa}
-              onChange={(e) => setForm({ ...form, cliente_fixa: e.target.checked })}
-            />
-            Cliente fixa
-          </label>
-          {form.cliente_fixa && (
-            <input
-              type="number"
-              value={form.frequencia_dias}
-              onChange={(e) => setForm({ ...form, frequencia_dias: e.target.value })}
-              className="border border-base-200 rounded-lg px-3 py-2.5"
-              placeholder="Frequência em dias (ex: 15)"
-            />
-          )}
-
           <div className="border-t border-base-200 pt-3 mt-1">
             <p className="text-xs uppercase tracking-wide text-ink/40 mb-2">Tipo de cobrança</p>
             <select
