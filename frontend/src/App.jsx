@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav.jsx';
 import { Carregando } from './components/Estado.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import { configurarNotificacoesPush } from './utils/push.js';
 
 const Agenda = lazy(() => import('./pages/Agenda.jsx'));
 const NovoAgendamento = lazy(() => import('./pages/NovoAgendamento.jsx'));
@@ -17,6 +18,10 @@ const Galeria = lazy(() => import('./pages/Galeria.jsx'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes.jsx'));
 
 export default function App() {
+  useEffect(() => {
+    configurarNotificacoesPush();
+  }, []);
+
   return (
     <div className="max-w-lg mx-auto min-h-screen app-shell pb-24">
       <Suspense fallback={<Carregando />}>

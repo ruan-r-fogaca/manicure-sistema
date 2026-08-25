@@ -5,7 +5,9 @@ import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
 import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import EditarAgendamentoModal from '../components/EditarAgendamentoModal.jsx';
+import DataPrevistaModal from '../components/DataPrevistaModal.jsx';
 import BarraServicos from '../components/BarraServicos.jsx';
+import NotificacoesBell from '../components/NotificacoesBell.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { Plus } from 'lucide-react';
@@ -39,12 +41,15 @@ export default function Dashboard() {
 
   const {
     agendamentoPendente,
+    itemAguardandoData,
     enviando,
     erroModal,
     mensagemSucesso,
     solicitarMudancaStatus,
     confirmarPagamento,
     cancelarPagamento,
+    confirmarDataPrevista,
+    cancelarDataPrevista,
   } = usePagamentoFlow({ aoAtualizar: carregar });
 
   async function mudarStatus(item, status) {
@@ -64,9 +69,12 @@ export default function Dashboard() {
 
   return (
     <div className="px-5 pt-8">
-      <h1 className="font-display font-semibold text-2xl text-plum-600 mb-5">
-        {resumo && formatarDataExtenso(resumo.data)}
-      </h1>
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="font-display font-semibold text-2xl text-plum-600">
+          {resumo && formatarDataExtenso(resumo.data)}
+        </h1>
+        <NotificacoesBell />
+      </div>
 
       <Erro mensagem={erro} />
       <Sucesso mensagem={mensagemSucesso} />
@@ -145,6 +153,15 @@ export default function Dashboard() {
         erro={erroModal}
         onSelecionar={confirmarPagamento}
         onFechar={cancelarPagamento}
+      />
+
+      <DataPrevistaModal
+        aberto={!!itemAguardandoData}
+        agendamento={itemAguardandoData}
+        enviando={enviando}
+        erro={erroModal}
+        onConfirmar={confirmarDataPrevista}
+        onFechar={cancelarDataPrevista}
       />
 
       <EditarAgendamentoModal

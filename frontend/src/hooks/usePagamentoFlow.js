@@ -18,6 +18,7 @@ import { api } from '../api/client.js';
 export function usePagamentoFlow({ aoAtualizar } = {}) {
   const navigate = useNavigate();
   const [itemPendente, setItemPendente] = useState(null);
+  const [itemAguardandoData, setItemAguardandoData] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [erroModal, setErroModal] = useState('');
   const [mensagemSucesso, setMensagemSucesso] = useState('');
@@ -36,8 +37,42 @@ export function usePagamentoFlow({ aoAtualizar } = {}) {
       setItemPendente(item);
       return;
     }
+    if (novoStatus === 'pendente') {
+      setErroModal('');
+      setItemAguardandoData(item);
+      return;
+    }
     await Promise.all(item.ids.map((id) => api.put(`/agendamentos/${id}/status`, { status: novoStatus })));
     aoAtualizar && aoAtualizar();
+  }
+
+  // Depois de marcar "pendente", pergunta quando o pagamento é esperado —
+  // guarda no pagamento pra o sistema avisar no sino quando o dia chegar.
+  async function confirmarDataPrevista(dataPrevista) {
+    if (!itemAguardandoData) return;
+    setEnviando(true);
+    setErroModal('');
+    try {
+      for (const id of itemAguardandoData.ids) {
+        await api.put(`/agendamentos/${id}/status`, { status: 'pendente' });
+        const pagamento = await api.get(`/pagamentos/agendamento/${id}`);
+        if (pagamento) {
+          await api.put(`/pagamentos/${pagamento.id}`, { data_prevista: dataPrevista });
+        }
+      }
+      setItemAguardandoData(null);
+      aoAtualizar && aoAtualizar();
+    } catch (e) {
+      setErroModal(e.message);
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  function cancelarDataPrevista() {
+    if (enviando) return;
+    setItemAguardandoData(null);
+    setErroModal('');
   }
 
   async function confirmarPagamento(formaPagamento) {
@@ -75,11 +110,14 @@ export function usePagamentoFlow({ aoAtualizar } = {}) {
 
   return {
     agendamentoPendente: itemPendente,
+    itemAguardandoData,
     enviando,
     erroModal,
     mensagemSucesso,
     solicitarMudancaStatus,
     confirmarPagamento,
     cancelarPagamento,
+    confirmarDataPrevista,
+    cancelarDataPrevista,
   };
 }

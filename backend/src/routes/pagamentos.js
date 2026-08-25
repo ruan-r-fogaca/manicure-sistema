@@ -16,7 +16,7 @@ router.get('/agendamento/:agendamentoId', async (req, res) => {
 
 // PUT /api/pagamentos/:id -> registrar pagamento (forma e status)
 router.put('/:id', async (req, res) => {
-  const { forma_pagamento, status } = req.body;
+  const { forma_pagamento, status, data_prevista } = req.body;
   const validosForma = ['pix', 'dinheiro', 'credito', 'debito'];
   const validosStatus = ['pago', 'pendente'];
 
@@ -24,6 +24,7 @@ router.put('/:id', async (req, res) => {
   if (forma_pagamento && !validosForma.includes(forma_pagamento)) return res.status(400).json({ erro: 'forma_pagamento inválida.' });
 
   const payload = { forma_pagamento, status };
+  if (data_prevista !== undefined) payload.data_prevista = data_prevista;
   if (status === 'pago') payload.data_pagamento = new Date().toISOString();
 
   const { data, error } = await supabase

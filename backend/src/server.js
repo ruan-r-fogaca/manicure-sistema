@@ -15,6 +15,8 @@ import mensagensRouter from './routes/mensagens.js';
 import relatoriosRouter from './routes/relatorios.js';
 import exportarRouter from './routes/exportar.js';
 import fotosRouter from './routes/fotos.js';
+import notificacoesRouter from './routes/notificacoes.js';
+import pushRouter from './routes/push.js';
 
 dotenv.config();
 
@@ -40,6 +42,8 @@ app.use('/api/mensagens', mensagensRouter);
 app.use('/api/relatorios', relatoriosRouter);
 app.use('/api/exportar', exportarRouter);
 app.use('/api/fotos', fotosRouter);
+app.use('/api/notificacoes', notificacoesRouter);
+app.use('/api/push', pushRouter);
 
 app.use((err, req, res, next) => {
   console.error(err);

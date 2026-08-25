@@ -6,6 +6,7 @@ import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import MiniCalendario from '../components/MiniCalendario.jsx';
 import BarraServicos from '../components/BarraServicos.jsx';
+import DataPrevistaModal from '../components/DataPrevistaModal.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { dataParaISO } from '../utils/data.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
@@ -87,12 +88,15 @@ export default function Agenda() {
 
   const {
     agendamentoPendente,
+    itemAguardandoData,
     enviando,
     erroModal,
     mensagemSucesso,
     solicitarMudancaStatus,
     confirmarPagamento,
     cancelarPagamento,
+    confirmarDataPrevista,
+    cancelarDataPrevista,
   } = usePagamentoFlow({ aoAtualizar: carregar });
 
   const itens = useMemo(() => agruparAgendamentos(agendamentos), [agendamentos]);
@@ -233,6 +237,15 @@ export default function Agenda() {
         erro={erroModal}
         onSelecionar={confirmarPagamento}
         onFechar={cancelarPagamento}
+      />
+
+      <DataPrevistaModal
+        aberto={!!itemAguardandoData}
+        agendamento={itemAguardandoData}
+        enviando={enviando}
+        erro={erroModal}
+        onConfirmar={confirmarDataPrevista}
+        onFechar={cancelarDataPrevista}
       />
     </div>
   );
