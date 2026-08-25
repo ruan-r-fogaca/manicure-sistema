@@ -32,6 +32,7 @@ export function agruparAgendamentos(lista) {
       // numericamente menor que o início.
       terminaDiaSeguinte: horaFim <= horaInicio,
       clientes: a.clientes,
+      servicoIds: ordenados.map((m) => m.servico_id),
       servicosNome: ordenados.map((m) => m.servicos?.nome).filter(Boolean).join(' + '),
       corServico: ordenados[0].servicos?.cor || null,
       valor: ordenados.reduce((soma, m) => soma + Number(m.valor), 0),

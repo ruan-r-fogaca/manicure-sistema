@@ -4,6 +4,7 @@ import { api } from '../api/client.js';
 import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
 import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
+import EditarAgendamentoModal from '../components/EditarAgendamentoModal.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { Plus, ChevronRight } from 'lucide-react';
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const [erro, setErro] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [clientesFixasPendentes, setClientesFixasPendentes] = useState([]);
+  const [itemEditando, setItemEditando] = useState(null);
 
   function carregar() {
     api
@@ -138,7 +140,7 @@ export default function Dashboard() {
                   className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
                   style={item.corServico ? { borderLeftColor: item.corServico, borderLeftWidth: '4px' } : undefined}
                 >
-                  <div>
+                  <div className="cursor-pointer" onClick={() => setItemEditando(item)}>
                     <p className="font-medium text-sm">
                       {item.hora_inicio}–{item.hora_fim}
                       {item.terminaDiaSeguinte && ' (dia seguinte)'} · {item.clientes?.nome}
@@ -163,6 +165,16 @@ export default function Dashboard() {
         erro={erroModal}
         onSelecionar={confirmarPagamento}
         onFechar={cancelarPagamento}
+      />
+
+      <EditarAgendamentoModal
+        item={itemEditando}
+        aberto={!!itemEditando}
+        onFechar={() => setItemEditando(null)}
+        onSalvo={() => {
+          setItemEditando(null);
+          carregar();
+        }}
       />
     </div>
   );
