@@ -5,6 +5,7 @@ import { Carregando, Erro, Sucesso } from '../components/Estado.jsx';
 import StatusSelect from '../components/StatusSelect.jsx';
 import PagamentoModal from '../components/PagamentoModal.jsx';
 import EditarAgendamentoModal from '../components/EditarAgendamentoModal.jsx';
+import BarraServicos from '../components/BarraServicos.jsx';
 import { usePagamentoFlow } from '../hooks/usePagamentoFlow.js';
 import { agruparAgendamentos } from '../utils/agrupar.js';
 import { Plus } from 'lucide-react';
@@ -116,9 +117,9 @@ export default function Dashboard() {
               {itensHoje.map((item) => (
                 <div
                   key={item.ids.join('-')}
-                  className="bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
-                  style={item.corServico ? { borderLeftColor: item.corServico, borderLeftWidth: '4px' } : undefined}
+                  className="relative bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
                 >
+                  <BarraServicos cores={item.coresServicos} />
                   <div className="cursor-pointer" onClick={() => setItemEditando(item)}>
                     <p className="font-medium text-sm">
                       {item.hora_inicio}–{item.hora_fim}

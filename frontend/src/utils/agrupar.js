@@ -35,6 +35,7 @@ export function agruparAgendamentos(lista) {
       servicoIds: ordenados.map((m) => m.servico_id),
       servicosNome: ordenados.map((m) => m.servicos?.nome).filter(Boolean).join(' + '),
       corServico: ordenados[0].servicos?.cor || null,
+      coresServicos: ordenados.map((m) => m.servicos?.cor).filter(Boolean),
       valor: ordenados.reduce((soma, m) => soma + Number(m.valor), 0),
       status: a.status,
       observacao: a.observacao,
