@@ -17,6 +17,8 @@ import exportarRouter from './routes/exportar.js';
 import fotosRouter from './routes/fotos.js';
 import notificacoesRouter from './routes/notificacoes.js';
 import pushRouter from './routes/push.js';
+import authRouter from './routes/auth.js';
+import { autenticar } from './middleware/autenticar.js';
 
 dotenv.config();
 
@@ -29,6 +31,11 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ status: 'ok', servico: 'API Sistema Manicure' });
 });
+
+app.use('/api/auth', authRouter);
+
+// Tudo abaixo daqui exige login.
+app.use('/api', autenticar);
 
 app.use('/api/clientes', clientesRouter);
 app.use('/api/servicos', servicosRouter);

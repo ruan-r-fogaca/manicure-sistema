@@ -1,8 +1,10 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import BottomNav from './components/BottomNav.jsx';
 import { Carregando } from './components/Estado.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import Login from './pages/Login.jsx';
+import { api } from './api/client.js';
 import { configurarNotificacoesPush } from './utils/push.js';
 
 const Agenda = lazy(() => import('./pages/Agenda.jsx'));
@@ -18,9 +20,15 @@ const Galeria = lazy(() => import('./pages/Galeria.jsx'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes.jsx'));
 
 export default function App() {
+  const [logado, setLogado] = useState(api.estaLogado());
+
   useEffect(() => {
-    configurarNotificacoesPush();
-  }, []);
+    if (logado) configurarNotificacoesPush();
+  }, [logado]);
+
+  if (!logado) {
+    return <Login onEntrar={() => setLogado(true)} />;
+  }
 
   return (
     <div className="max-w-lg mx-auto min-h-screen app-shell pb-24">

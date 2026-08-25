@@ -278,6 +278,13 @@ export default function Configuracoes() {
           )
         )}
       </div>
+
+      <button
+        onClick={() => api.logout()}
+        className="w-full text-center text-sm text-status-cancelado font-medium mt-8 py-2"
+      >
+        Sair da conta
+      </button>
     </div>
   );
 }
