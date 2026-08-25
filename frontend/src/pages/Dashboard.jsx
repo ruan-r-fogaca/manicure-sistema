@@ -66,6 +66,9 @@ export default function Dashboard() {
   const proximoItem = resumo?.proximo_atendimento
     ? itensHoje.find((it) => it.ids.includes(resumo.proximo_atendimento.id))
     : null;
+  // Atendido/cancelado já foi resolvido — some da lista do dia, que é pra
+  // mostrar o que ainda falta fazer (pendente continua, ainda precisa do pagamento).
+  const itensPendentesDeExibir = itensHoje.filter((item) => item.status !== 'atendido' && item.status !== 'cancelado');
 
   return (
     <div className="px-5 pt-8">
@@ -118,11 +121,11 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {itensHoje.length === 0 ? (
-            <p className="text-sm text-ink/50 py-6 text-center">Nenhum atendimento hoje ainda.</p>
+          {itensPendentesDeExibir.length === 0 ? (
+            <p className="text-sm text-ink/50 py-6 text-center">Nenhum atendimento pendente por aqui.</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {itensHoje.map((item) => (
+              {itensPendentesDeExibir.map((item) => (
                 <div
                   key={item.ids.join('-')}
                   className="relative overflow-hidden bg-white rounded-xl2 p-3 border border-base-200 flex justify-between items-center"
