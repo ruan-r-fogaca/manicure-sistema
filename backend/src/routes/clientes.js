@@ -17,16 +17,13 @@ async function nomeJaExiste(nome, excluirId) {
   return data.length > 0;
 }
 
+// O valor do plano mensal (fixo ou por serviço) não é mais exigido aqui — dá
+// pra marcar a cliente como mensal já no cadastro e definir o valor depois,
+// na página dela. Enquanto não tiver valor, cobranças geradas saem R$0.
 function validarCobranca(body) {
-  const { tipo_cobranca, valor_mensal_fixo, valor_por_servico, dia_cobranca } = body;
+  const { tipo_cobranca, dia_cobranca } = body;
   if (tipo_cobranca !== undefined && !TIPOS_COBRANCA.includes(tipo_cobranca)) {
     return 'tipo_cobranca inválido.';
-  }
-  if (tipo_cobranca === 'mensal_fixo' && !valor_mensal_fixo) {
-    return 'Informe o valor mensal fixo para esse tipo de cobrança.';
-  }
-  if (tipo_cobranca === 'mensal_por_servico' && !valor_por_servico) {
-    return 'Informe o valor por serviço para esse tipo de cobrança.';
   }
   if (dia_cobranca !== undefined && dia_cobranca !== null && (dia_cobranca < 1 || dia_cobranca > 31)) {
     return 'dia_cobranca deve ser entre 1 e 31.';

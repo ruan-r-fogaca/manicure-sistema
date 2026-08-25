@@ -21,6 +21,7 @@ export default function Clientes() {
   const [mostrarForm, setMostrarForm] = useState(false);
   const [novoNome, setNovoNome] = useState('');
   const [novoTelefone, setNovoTelefone] = useState('');
+  const [novoTipoCobranca, setNovoTipoCobranca] = useState('por_atendimento');
   const [salvando, setSalvando] = useState(false);
 
   function carregarTotalAtivos() {
@@ -55,9 +56,14 @@ export default function Clientes() {
     if (!novoNome.trim()) return;
     setSalvando(true);
     try {
-      await api.post('/clientes', { nome: novoNome, telefone: novoTelefone });
+      await api.post('/clientes', {
+        nome: novoNome,
+        telefone: novoTelefone,
+        tipo_cobranca: novoTipoCobranca === 'mensal' ? 'mensal_por_servico' : 'por_atendimento',
+      });
       setNovoNome('');
       setNovoTelefone('');
+      setNovoTipoCobranca('por_atendimento');
       setMostrarForm(false);
       carregar();
       carregarTotalAtivos();
@@ -113,12 +119,22 @@ export default function Clientes() {
             onChange={(e) => setNovoTelefone(mascararTelefone(e.target.value))}
             className="border border-base-200 rounded-lg px-3 py-2.5"
           />
+          <select
+            value={novoTipoCobranca}
+            onChange={(e) => setNovoTipoCobranca(e.target.value)}
+            className="border border-base-200 rounded-lg px-3 py-2.5 bg-white"
+          >
+            <option value="por_atendimento">Por atendimento (avulso)</option>
+            <option value="mensal">Mensal</option>
+          </select>
           <button disabled={salvando} className="bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 rounded-lg py-2.5 font-medium disabled:opacity-60">
             {salvando ? 'Salvando...' : 'Salvar cliente'}
           </button>
-          <p className="text-xs text-ink/40 -mt-1">
-            O tipo de cobrança (avulso ou mensal) é definido depois, na página da cliente.
-          </p>
+          {novoTipoCobranca === 'mensal' && (
+            <p className="text-xs text-ink/40 -mt-1">
+              O valor e os detalhes do plano mensal são definidos depois, na página da cliente.
+            </p>
+          )}
         </form>
       )}
 
