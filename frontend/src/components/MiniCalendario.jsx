@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { api } from '../api/client.js';
 
 const MESES = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -20,6 +21,19 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
   const base = dataSelecionada ? new Date(dataSelecionada + 'T12:00:00') : new Date();
   const [mesVisivel, setMesVisivel] = useState(base.getMonth());
   const [anoVisivel, setAnoVisivel] = useState(base.getFullYear());
+  const [diasComAgendamento, setDiasComAgendamento] = useState(new Set());
+
+  // Busca só quando o calendário está aberto — evita chamada à toa toda vez
+  // que o mês/ano muda em segundo plano.
+  useEffect(() => {
+    if (!aberto) return;
+    const inicio = paraISO(anoVisivel, mesVisivel, 1);
+    const fim = paraISO(anoVisivel, mesVisivel, new Date(anoVisivel, mesVisivel + 1, 0).getDate());
+    api
+      .get(`/agendamentos?inicio=${inicio}&fim=${fim}`)
+      .then((lista) => setDiasComAgendamento(new Set(lista.filter((a) => a.status !== 'cancelado').map((a) => a.data))))
+      .catch(() => {});
+  }, [aberto, mesVisivel, anoVisivel]);
 
   const primeiroDiaSemana = new Date(anoVisivel, mesVisivel, 1).getDay();
   const totalDias = new Date(anoVisivel, mesVisivel + 1, 0).getDate();
@@ -85,13 +99,18 @@ export default function MiniCalendario({ dataSelecionada, onSelecionarData }) {
                 if (dia === null) return <span key={i} />;
                 const iso = paraISO(anoVisivel, mesVisivel, dia);
                 const selecionado = iso === dataSelecionada;
+                const temAgendamento = diasComAgendamento.has(iso);
                 return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => selecionar(dia)}
                     className={`text-xs rounded-full w-7 h-7 flex items-center justify-center ${
-                      selecionado ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 font-medium' : 'text-ink/70 hover:bg-base-100'
+                      selecionado
+                        ? 'bg-gradient-to-br from-rose-500 to-plum-600 text-white shadow-sm shadow-plum-600/30 font-medium'
+                        : temAgendamento
+                        ? 'bg-status-confirmado/15 text-status-confirmado font-medium hover:bg-status-confirmado/25'
+                        : 'text-ink/70 hover:bg-base-100'
                     }`}
                   >
                     {dia}
